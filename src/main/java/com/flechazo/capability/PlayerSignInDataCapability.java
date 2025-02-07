@@ -1,5 +1,7 @@
 package com.flechazo.capability;
 
+import com.flechazo.network.ModNetworkHandler;
+import com.flechazo.network.PlayerDataSyncPacket;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 

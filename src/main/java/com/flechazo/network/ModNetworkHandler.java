@@ -62,4 +62,13 @@ public class ModNetworkHandler {
             client.execute(() -> RewardOptionSyncPacketHandler.handle(packet));
         });
     }
+
+    /**
+     * 注册所有的网络通道
+     */
+    public static void registerPackets() {
+        registerC2SPackets();
+        registerS2CPackets();
+    }
+
 }

@@ -1,17 +1,28 @@
 package com.flechazo;
 
+import com.flechazo.command.SignInCommand;
 import com.flechazo.config.ClientConfig;
 import com.flechazo.config.RewardOptionDataManager;
 import com.flechazo.config.ServerConfig;
+import com.flechazo.event.ClientEventHandler;
 import com.flechazo.network.AdvancementData;
+import com.flechazo.network.ModNetworkHandler;
 import com.flechazo.network.SplitPacket;
 import com.flechazo.rewards.RewardList;
 import com.flechazo.screen.coordinate.TextureCoordinate;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 import net.minecraftforge.fml.config.ModConfig;
 import org.slf4j.Logger;
@@ -24,6 +35,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 public class SakuraSignInFabric implements ModInitializer {
 	public static final String MOD_ID = "sakura-sign-in";
@@ -96,42 +108,40 @@ public class SakuraSignInFabric implements ModInitializer {
 	@Getter
 	private static final RewardList clipboard = new RewardList();
 
-	public SakuraSignInFabric() {
+	@Override
+	public void onInitialize(){
 
 		// 注册网络通道
 		ModNetworkHandler.registerPackets();
 
-		// 注册服务器启动和关闭事件
-		MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
-		MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
+		// 注册服务器生命周期事件
+		ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
+		ServerLifecycleEvents.SERVER_STOPPING.register(this::onServerStopping);
 
-		// 注册当前实例到MinecraftForge的事件总线，以便监听和处理游戏内的各种事件
-		MinecraftForge.EVENT_BUS.register(this);
+		// 注册命令
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			SignInCommand.register(dispatcher);
+		});
 
-		// 注册服务器和客户端配置
-		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.SERVER_CONFIG);
-		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.CLIENT_CONFIG);
-		if (FMLEnvironment.dist == Dist.CLIENT) {
-			FMLJavaModLoadingContext.get().getModEventBus().addListener(ClientEventHandler::registerKeyMappings);
-			FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
-		}
-
-		// 注册客户端设置事件到MOD事件总线
-		// FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+		// 玩家登出事件
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			handlePlayerLogout(handler.getPlayer());
+		});
 	}
 
-	@SubscribeEvent
-	public void onServerStarting(ServerStartingEvent event) {
-		// 服务器启动时加载数据
+	private void onServerStarting(MinecraftServer server) {
 		RewardOptionDataManager.loadRewardOption();
 		LOGGER.debug("SignIn data loaded.");
 	}
 
-	@SubscribeEvent
-	public void onServerStopping(ServerStoppingEvent event) {
-		// 服务器关闭时保存数据
+	private void onServerStopping(MinecraftServer server) {
 		// RewardOptionDataManager.saveRewardOption();
 	}
+
+	private void handlePlayerLogout(PlayerEntity player) {
+		LOGGER.debug("Player has logged out.");
+		// 处理玩家登出逻辑
+		}
 
 	public static TextureCoordinate getThemeTextureCoordinate(boolean nonNull) {
 		if (nonNull && (themeTextureCoordinate == null || themeTexture == null)) ClientEventHandler.loadThemeTexture();
@@ -153,19 +163,6 @@ public class SakuraSignInFabric implements ModInitializer {
 		ClientEventHandler.createConfigPath();
 	}
 
-	/**
-	 * 注册命令事件的处理方法
-	 * 当注册命令事件被触发时，此方法将被调用
-	 * 该方法主要用于注册签到命令到事件调度器
-	 *
-	 * @param event 注册命令事件对象，通过该对象可以获取到事件调度器
-	 */
-	@SubscribeEvent
-	public void onRegisterCommands(RegisterCommandsEvent event) {
-		LOGGER.debug("Registering commands");
-		// 注册签到命令到事件调度器
-		SignInCommand.register(event.getDispatcher());
-	}
 
 	/**
 	 * 玩家注销事件
@@ -176,21 +173,21 @@ public class SakuraSignInFabric implements ModInitializer {
 	public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
 		LOGGER.debug("Player has logged out.");
 		// 获取退出的玩家对象
-		Player player = event.getEntity();
+		PlayerEntity player = player.get.getEntity();
 		// 判断是否在客户端并且退出的玩家是客户端的当前玩家
 		if (player.getCommandSenderWorld().isClientSide) {
-			if (Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
-				LOGGER.debug("Current player has logged out.");
-				// 当前客户端玩家与退出的玩家相同
-				enabled = false;
-			}
-		}
+            if (MinecraftClient.getInstance ().player != null && MinecraftClient.getInstance ().player.getUuid ().equals (player.getUuid ())) {
+                LOGGER.debug ("Current player has logged out.");
+                // 当前客户端玩家与退出的玩家相同
+                enabled = false;
+            }
+        }
 	}
 
 	/**
 	 * 打开指定路径的文件夹
 	 */
-	@OnlyIn(Dist.CLIENT)
+	@Environment  ( EnvType.CLIENT)
 	public static void openFileInFolder(Path path) {
 		try {
 			if (Files.isDirectory(path)) {

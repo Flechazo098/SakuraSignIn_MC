@@ -7,6 +7,8 @@ import com.flechazo.config.RewardOptionDataManager;
 import com.flechazo.config.StringList;
 import com.flechazo.enums.ERewardRule;
 import com.flechazo.enums.ERewardType;
+import com.flechazo.network.ModNetworkHandler;
+import com.flechazo.network.RewardOptionSyncPacket;
 import com.flechazo.rewards.Reward;
 import com.flechazo.rewards.RewardList;
 import com.flechazo.rewards.RewardManager;
@@ -599,7 +601,7 @@ public class RewardOptionScreen extends Screen {
                 ClientPlayerEntity player = MinecraftClient.getInstance().player;
                 if (player != null) {
                     if (player.hasPermissionLevel(3)) {
-                        for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket(player.hasPermissionLevel(3)).split()) {
+                        for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket(player.hasPermissionLevel(3)).Chopping ()) {
                             ModNetworkHandler.INSTANCE.sendToServer(rewardOptionSyncPacket);
                         }
                         flag.set(true);

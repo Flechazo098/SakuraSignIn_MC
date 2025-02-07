@@ -1,6 +1,8 @@
 package com.flechazo.config;
 
 
+import com.flechazo.network.RewardOptionSyncData;
+import com.flechazo.network.RewardOptionSyncPacket;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
@@ -1042,7 +1044,7 @@ public class RewardOptionDataManager {
             if (!op && rule == ERewardRule.CDK_REWARD) continue;
             RewardOptionDataManager.getRewardMap(rule).forEach((key, value) -> {
                 List<RewardOptionSyncData> list = value.stream()
-                        .map(reward -> new RewardOptionSyncData(rule, key, reward))
+                        .map(reward -> new RewardOptionSyncData (rule, key, reward))
                         .toList();
                 dataList.addAll(list);
             });
@@ -1052,7 +1054,7 @@ public class RewardOptionDataManager {
 
     public static RewardOptionData fromSyncPacketList(List<RewardOptionSyncPacket> packetList) {
         RewardOptionData result = new RewardOptionData();
-        packetList.stream().flatMap(packet -> packet.getRewardOptionData().stream()).collect(Collectors.groupingBy(RewardOptionSyncData::rule)).forEach((rule, dataList) -> {
+        packetList.stream().flatMap(packet -> packet.getData().stream()).collect(Collectors.groupingBy(RewardOptionSyncData::rule)).forEach((rule, dataList) -> {
             Map<String, RewardList> rewardMap = new LinkedHashMap<>();
             dataList.forEach(data -> {
                 RewardList rewardList = rewardMap.computeIfAbsent(data.key(), key -> new RewardList());

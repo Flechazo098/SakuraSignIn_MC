@@ -2,6 +2,7 @@ package com.flechazo.event;
 
 import com.flechazo.SakuraSignInFabric;
 import com.flechazo.capability.IPlayerSignInData;
+import com.flechazo.capability.PlayerSignInData;
 import com.flechazo.capability.PlayerSignInDataComponent;
 import com.flechazo.config.ClientConfig;
 import com.flechazo.config.RewardOptionDataManager;
@@ -19,7 +20,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -39,8 +39,8 @@ public class ServerEventHandler implements EntityComponentInitializer {
     private static boolean isPlayerLoggedIn = false;
     private static boolean hasTriggeredLoadComplete = false;
 
-    public static final ComponentKey<PlayerSignInDataComponent> PLAYER_DATA = 
-        ComponentRegistry.getOrCreate(new Identifier(SakuraSignInFabric.MOD_ID, "player_sign_in_data"), PlayerSignInDataComponent.class);
+    public static final ComponentKey< PlayerSignInData > PLAYER_DATA =
+        ComponentRegistry.getOrCreate(new Identifier(SakuraSignInFabric.MOD_ID, "player_sign_in_data"), PlayerSignInData.class);
 
     /**
      * 注册事件处理器
@@ -74,7 +74,7 @@ public class ServerEventHandler implements EntityComponentInitializer {
             syncPlayerData(player);
 
             // 同步签到奖励配置到客户端  
-            for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket(player.hasPermissions(3)).split()) {
+            for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket(player.hasPermissionLevel(3)).Chopping ()) {
                 ServerPlayNetworking.send(player, ModNetworkHandler.REWARD_OPTION_SYNC, rewardOptionSyncPacket.toBytes());
             }
 
@@ -121,7 +121,7 @@ public class ServerEventHandler implements EntityComponentInitializer {
     public static void syncPlayerData(ServerPlayerEntity player) {
         IPlayerSignInData data = player.getComponent(PLAYER_DATA);
         PacketByteBuf buf = PacketByteBufs.create();
-        PlayerSignInDataSyncPacket.encode(new PlayerSignInDataSyncPacket(player.getUuid(), data), buf);
+        PlayerDataSyncPacket.handle(new PlayerDataSyncPacket(player.getUuid(), data), buf);
         ServerPlayNetworking.send(player, ModNetworkHandler.PLAYER_SIGN_IN_DATA_SYNC, buf);
     }
 

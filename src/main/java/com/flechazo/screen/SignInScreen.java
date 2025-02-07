@@ -7,6 +7,9 @@ import com.flechazo.config.ClientConfig;
 import com.flechazo.config.ServerConfig;
 import com.flechazo.enums.ESignInStatus;
 import com.flechazo.enums.ESignInType;
+import com.flechazo.event.ClientEventHandler;
+import com.flechazo.network.ModNetworkHandler;
+import com.flechazo.network.SignInPacket;
 import com.flechazo.rewards.RewardList;
 import com.flechazo.rewards.RewardManager;
 import com.flechazo.screen.component.IText;
@@ -548,47 +551,34 @@ public class SignInScreen extends Screen{
                 button.renderPopup(graphics, mouseX, mouseY, this.keyCode, this.modifiers);
             }
         }
-        // 显示开屏提示
         else {
             AbstractGuiUtils.fill(graphics, 4, 4, super.width - 8, super.height - 8, 0xDD000000, 15);
-            float x, y;
+            float x = (super.width - AbstractGuiUtils.multilineTextWidth(tips)) / 2.0f;
+            float y = (super.height - (AbstractGuiUtils.multilineTextHeight(tips) + 4 + 20)) / 2.0f;
             tips.setGraphics(graphics).setFont(super.textRenderer);
-            int textHeight = AbstractGuiUtils.multilineTextHeight(tips);
-            int textWidth = AbstractGuiUtils.multilineTextWidth(tips);
-            int buttonWidth = Math.min(100, textWidth / 2 - 5);
-            x = (super.width - textWidth) / 2.0f;
-            y = (super.height - (textHeight + 4 + 20)) / 2.0f;
             AbstractGuiUtils.drawString(tips, x, y);
 
-            // 替换为遍历 drawables
+            int buttonWidth = Math.min(100, AbstractGuiUtils.multilineTextWidth(tips) / 2 - 5);
+
             for (Drawable drawable : drawables) {
-                if (drawable instanceof ButtonWidget) {
-                    ButtonWidget button = (ButtonWidget) drawable;
-                    if (button.getMessage().getString().equalsIgnoreCase(IText.i18n("确认").getContent())
-                            || button.getMessage().getString().equalsIgnoreCase(IText.i18n("不再提醒").getContent())) {
+                if (drawable instanceof ButtonWidget button) {
+                    String buttonText = button.getMessage().getString();
+                    boolean isConfirmButton = buttonText.equalsIgnoreCase(IText.i18n("确认").getContent());
+                    boolean isDontShowAgainButton = buttonText.equalsIgnoreCase(IText.i18n("不再提醒").getContent());
 
-                        // 使用 Builder 设置按钮属性
-                        ButtonWidget.Builder buttonBuilder = new ButtonWidget.Builder(button.getMessage(), button::onPress)
-                                .position((int) x, (int) (y + textHeight + 4))  // 设置位置
-                                .size(buttonWidth, 20);  // 设置宽度和高度
+                    if (isConfirmButton || isDontShowAgainButton) {
+                        ButtonWidget newButton = new ButtonWidget.Builder(button.getMessage(), null)
+                                .position(isConfirmButton ? (int)x : (int)(x + AbstractGuiUtils.multilineTextWidth(tips) - buttonWidth),
+                                        (int)(y + AbstractGuiUtils.multilineTextHeight(tips) + 4))
+                                .size(buttonWidth, 20)
+                                .build();
 
-                        // 根据按钮文本设置 X 坐标
-                        if (button.getMessage().getString().equalsIgnoreCase(IText.i18n("确认").getContent())) {
-                            buttonBuilder.position((int) x, (int) (y + textHeight + 4));  // 设置确认按钮位置
-                        } else {
-                            buttonBuilder.position((int) (x + textWidth - buttonWidth), (int) (y + textHeight + 4));  // 设置不再提醒按钮位置
-                        }
-
-                        // 构建按钮
-                        ButtonWidget newButton = buttonBuilder.build();
                         newButton.render(graphics, mouseX, mouseY, partialTicks);
                     }
                 }
             }
         }
-
     }
-
     /**
      * 检测鼠标点击事件
      */

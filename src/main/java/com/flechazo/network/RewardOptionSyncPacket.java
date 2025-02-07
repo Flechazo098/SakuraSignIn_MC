@@ -44,8 +44,7 @@ public class RewardOptionSyncPacket extends SplitPacket {
         return 1024;
     }
 
-    @Override
-    public List<RewardOptionSyncPacket> split() {
+    public List<RewardOptionSyncPacket> Chopping () {
         List<RewardOptionSyncPacket> result = new ArrayList<>();
         for (int i = 0, index = 0; i < data.size() / getChunkSize() + 1; i++) {
             RewardOptionSyncPacket packet = new RewardOptionSyncPacket();

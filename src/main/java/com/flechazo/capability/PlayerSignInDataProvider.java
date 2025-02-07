@@ -29,9 +29,6 @@ public class PlayerSignInDataProvider implements Component, AutoSyncedComponent 
     /**
      * 序列化玩家签到数据为NBT格式
      *
-     * @return 返回包含玩家签到数据的NbtCompound对象
-     * <p>
-     * 该方法实现了玩家签到数据的序列化，返回的数据可以用于存储或传输
      */
     @Override
     public void writeToNbt(NbtCompound nbt) {

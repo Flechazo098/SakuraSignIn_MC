@@ -2,6 +2,7 @@ package com.flechazo.rewards.impl;
 
 import com.flechazo.SakuraSignInFabric;
 import com.flechazo.enums.ERewardType;
+import com.flechazo.network.AdvancementData;
 import com.flechazo.rewards.RewardParser;
 import com.flechazo.util.I18nUtils;
 import com.google.gson.JsonObject;
@@ -54,11 +55,11 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
     }
 
     public static @NonNull String getDisplayName(AdvancementData advancementData) {
-        return advancementData.getAdvancementDisplay().getTitle().getString();
+        return advancementData.getDisplayInfo().getTitle().getString();
     }
 
     public static @NonNull String getDescription(AdvancementData advancementData) {
-        return advancementData.getAdvancementDisplay().getDescription().getString();
+        return advancementData.getDisplayInfo().getDescription().getString();
     }
 
     public static @NonNull String getDisplayName(Advancement advancement) {
@@ -81,7 +82,7 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
                 , SakuraSignInFabric.getAdvancementData().stream()
                         .filter(data -> data.getId().equals(deserialize))
                         .findFirst().orElse(new AdvancementData(deserialize, null))
-                        .getAdvancementDisplay().getTitle().getString());
+                        .getDisplayInfo().getTitle().getString());
     }
 
     public @NonNull

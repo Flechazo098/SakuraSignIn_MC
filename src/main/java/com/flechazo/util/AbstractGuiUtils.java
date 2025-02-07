@@ -2,6 +2,7 @@ package com.flechazo.util;
 
 import com.flechazo.SakuraSignInFabric;
 import com.flechazo.enums.ERewardType;
+import com.flechazo.network.AdvancementData;
 import com.flechazo.rewards.Reward;
 import com.flechazo.rewards.RewardManager;
 import com.flechazo.screen.component.IText;
@@ -737,7 +738,7 @@ public class AbstractGuiUtils {
             AdvancementData advancementData = SakuraSignInFabric.getAdvancementData().stream()
                     .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
                     .findFirst().orElse(new AdvancementData (resourceLocation, null));
-            graphics.drawItem(advancementData.getAdvancementDisplay().getIcon(), x, y);
+            graphics.drawItem(advancementData.getDisplayInfo().getIcon(), x, y);
         }
         // 指令
         else if (reward.getType().equals(ERewardType.COMMAND)) {

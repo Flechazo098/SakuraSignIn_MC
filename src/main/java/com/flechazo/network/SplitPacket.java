@@ -62,7 +62,7 @@ public abstract class SplitPacket {
         return Math.abs(System.currentTimeMillis() - Long.parseLong(key.split("\\.")[0])) > CACHE_EXPIRE_TIME;
     }
 
-    protected void toBytes(PacketByteBuf buf) {
+    public void toBytes(PacketByteBuf buf) {
         buf.writeString(id);
         buf.writeInt(total);
         buf.writeInt(sort);
