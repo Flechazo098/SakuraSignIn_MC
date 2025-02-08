@@ -1,102 +1,132 @@
 package com.flechazo.config;
-import net.minecraftforge.common.ForgeConfigSpec;
+
+import me.shedaniel.clothconfig2.api.ConfigCategory;
+import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.api.ConfigBuilder;
+import me.shedaniel.clothconfig2.impl.ConfigBuilderImpl;
+import net.minecraft.text.Text;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 客户端配置
+ * @author Flechazo
  */
 public class ClientConfig {
-    public static final ForgeConfigSpec CLIENT_CONFIG;
+    private static ConfigBuilder BUILDER = new ConfigBuilderImpl();
+    private static ConfigEntryBuilder ENTRY_BUILDER = BUILDER.entryBuilder();
+    private static ConfigCategory CATEGORY;
+
     /**
      * 主题设置
      */
-    public static final ForgeConfigSpec.ConfigValue<String> THEME;
+    @Getter
+    @Setter
+    private static String THEME = "textures/gui/sign_in_calendar_sakura.png";
+    
     /**
      * 是否使用内置主题特殊图标
      */
-    public static final ForgeConfigSpec.BooleanValue SPECIAL_THEME;
+    @Getter
+    @Setter
+    private static Boolean SPECIAL_THEME = true;
+    
     /**
      * 签到页面显示上月奖励
      */
-    public static final ForgeConfigSpec.BooleanValue SHOW_LAST_REWARD;
+    @Getter
+    @Setter
+    private static Boolean SHOW_LAST_REWARD = false;
+    
     /**
      * 签到页面显示下月奖励
      */
-    public static final ForgeConfigSpec.BooleanValue SHOW_NEXT_REWARD;
+    @Getter
+    @Setter
+    private static Boolean SHOW_NEXT_REWARD = false;
+    
     /**
      * 自动领取
      */
-    public static final ForgeConfigSpec.BooleanValue AUTO_REWARDED;
+    @Getter
+    @Setter
+    private static Boolean AUTO_REWARDED = false;
 
     /**
      * 背包界面签到按钮坐标
      */
-    public static final ForgeConfigSpec.ConfigValue<String> INVENTORY_SIGN_IN_BUTTON_COORDINATE;
+    @Getter
+    @Setter
+    private static String INVENTORY_SIGN_IN_BUTTON_COORDINATE = "92,2";
 
     /**
      * 背包界面奖励配置按钮坐标
      */
-    public static final ForgeConfigSpec.ConfigValue<String> INVENTORY_REWARD_OPTION_BUTTON_COORDINATE;
+    @Getter
+    @Setter
+    private static String INVENTORY_REWARD_OPTION_BUTTON_COORDINATE = "72,2";
 
     /**
      * 显示签到界面提示
      */
-    public static final ForgeConfigSpec.BooleanValue SHOW_SIGN_IN_SCREEN_TIPS;
+    @Getter
+    @Setter
+    private static Boolean SHOW_SIGN_IN_SCREEN_TIPS = true;
 
     static {
-        ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
+        BUILDER.setTitle(Text.translatable("config.sakura-sign-in.title"));
+        CATEGORY = BUILDER.getOrCreateCategory(Text.translatable("config.sakura-sign-in.category.client"));
 
-        // 定义客户端配置项
-        CLIENT_BUILDER.comment("Client Settings").push("client");
+        CATEGORY.addEntry(ENTRY_BUILDER.startStrField(Text.translatable("config.sakura-sign-in.theme"), THEME)
+                .setDefaultValue("textures/gui/sign_in_calendar_sakura.png")
+                .setTooltip(Text.translatable("config.sakura-sign-in.theme.tooltip"))
+                .setSaveConsumer(newValue -> THEME = newValue)
+                .build());
 
-        // 主题
-        THEME = CLIENT_BUILDER
-                .comment("theme textures path, can be external path: config/sakura_sign_in/themes/your_theme.png"
-                        , "主题材质路径，可为外部路径： config/sakura_sign_in/themes/your_theme.png")
-                .define("theme", "textures/gui/sign_in_calendar_sakura.png");
+        CATEGORY.addEntry(ENTRY_BUILDER.startBooleanToggle(Text.translatable("config.sakura-sign-in.special_theme"), SPECIAL_THEME)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config.sakura-sign-in.special_theme.tooltip"))
+                .setSaveConsumer(newValue -> SPECIAL_THEME = newValue)
+                .build());
 
-        // 内置主题特殊图标
-        SPECIAL_THEME = CLIENT_BUILDER
-                .comment("Whether or not to use the built-in theme special icons."
-                        , "是否使用内置主题特殊图标。")
-                .define("specialTheme", true);
+        CATEGORY.addEntry(ENTRY_BUILDER.startBooleanToggle(Text.translatable("config.sakura-sign-in.show_last_reward"), SHOW_LAST_REWARD)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config.sakura-sign-in.show_last_reward.tooltip"))
+                .setSaveConsumer(newValue -> SHOW_LAST_REWARD = newValue)
+                .build());
 
-        // 签到页面显示上月奖励
-        SHOW_LAST_REWARD = CLIENT_BUILDER
-                .comment("The sign-in page displays last month's rewards. Someone said it didn't look good on display."
-                        , "签到页面是否显示上个月的奖励，有人说它显示出来不好看。")
-                .define("showLastReward", false);
+        CATEGORY.addEntry(ENTRY_BUILDER.startBooleanToggle(Text.translatable("config.sakura-sign-in.show_next_reward"), SHOW_NEXT_REWARD)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config.sakura-sign-in.show_next_reward.tooltip"))
+                .setSaveConsumer(newValue -> SHOW_NEXT_REWARD = newValue)
+                .build());
 
-        // 签到页面显示下月奖励
-        SHOW_NEXT_REWARD = CLIENT_BUILDER
-                .comment("The sign-in page displays next month's rewards. Someone said it didn't look good on display."
-                        , "签到页面是否显示下个月的奖励，有人说它显示出来不好看。")
-                .define("showNextReward", false);
+        CATEGORY.addEntry(ENTRY_BUILDER.startBooleanToggle(Text.translatable("config.sakura-sign-in.auto_rewarded"), AUTO_REWARDED)
+                .setDefaultValue(false)
+                .setTooltip(Text.translatable("config.sakura-sign-in.auto_rewarded.tooltip"))
+                .setSaveConsumer(newValue -> AUTO_REWARDED = newValue)
+                .build());
 
-        // 自动领取
-        AUTO_REWARDED = CLIENT_BUILDER
-                .comment("Whether the rewards will be automatically claimed when you sign-in or re-sign-in."
-                        , "签到或补签时是否自动领取奖励。")
-                .define("autoRewarded", false);
+        CATEGORY.addEntry(ENTRY_BUILDER.startStrField(Text.translatable("config.sakura-sign-in.inventory_sign_in_button_coordinate"), INVENTORY_SIGN_IN_BUTTON_COORDINATE)
+                .setDefaultValue("92,2")
+                .setTooltip(Text.translatable("config.sakura-sign-in.inventory_sign_in_button_coordinate.tooltip"))
+                .setSaveConsumer(newValue -> INVENTORY_SIGN_IN_BUTTON_COORDINATE = newValue)
+                .build());
 
-        // 背包界面签到按钮坐标
-        INVENTORY_SIGN_IN_BUTTON_COORDINATE = CLIENT_BUILDER
-                .comment("The coordinate of the sign-in button in the inventory screen. If the coordinate is 0~1, it is the percentage position."
-                        , "背包界面签到按钮坐标，若坐标为0~1之间的小数则为百分比位置。")
-                .define("inventorySignInButtonCoordinate", "92,2");
+        CATEGORY.addEntry(ENTRY_BUILDER.startStrField(Text.translatable("config.sakura-sign-in.inventory_reward_option_button_coordinate"), INVENTORY_REWARD_OPTION_BUTTON_COORDINATE)
+                .setDefaultValue("72,2")
+                .setTooltip(Text.translatable("config.sakura-sign-in.inventory_reward_option_button_coordinate.tooltip"))
+                .setSaveConsumer(newValue -> INVENTORY_REWARD_OPTION_BUTTON_COORDINATE = newValue)
+                .build());
 
-        // 背包界面奖励配置按钮坐标
-        INVENTORY_REWARD_OPTION_BUTTON_COORDINATE = CLIENT_BUILDER
-                .comment("The coordinate of the reward option button in the inventory screen. If the coordinate is 0~1, it is the percentage position."
-                        , "背包界面奖励配置按钮坐标，若坐标为0~1之间的小数则为百分比位置。")
-                .define("inventoryRewardOptionButtonCoordinate", "72,2");
+        CATEGORY.addEntry(ENTRY_BUILDER.startBooleanToggle(Text.translatable("config.sakura-sign-in.show_sign_in_screen_tips"), SHOW_SIGN_IN_SCREEN_TIPS)
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("config.sakura-sign-in.show_sign_in_screen_tips.tooltip"))
+                .setSaveConsumer(newValue -> SHOW_SIGN_IN_SCREEN_TIPS = newValue)
+                .build());
+    }
 
-        SHOW_SIGN_IN_SCREEN_TIPS = CLIENT_BUILDER
-                .comment("Whether or not to display a prompt for action when you open the sign-in screen."
-                        , "打开签到页面时是否显示操作提示。")
-                .define("showSignInScreenTips", true);
-
-        CLIENT_BUILDER.pop();
-
-        CLIENT_CONFIG = CLIENT_BUILDER.build();
+    public static void init() {
+        BUILDER.build();
     }
 }
