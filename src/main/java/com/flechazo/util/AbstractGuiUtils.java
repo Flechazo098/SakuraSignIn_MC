@@ -736,9 +736,9 @@ public class AbstractGuiUtils {
         else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
             Identifier resourceLocation = RewardManager.deserializeReward(reward);
             AdvancementData advancementData = SakuraSignInFabric.getAdvancementData().stream()
-                    .filter(data -> data.getId().toString().equalsIgnoreCase(resourceLocation.toString()))
+                    .filter(data -> data.id ().toString().equalsIgnoreCase(resourceLocation.toString()))
                     .findFirst().orElse(new AdvancementData (resourceLocation, null));
-            graphics.drawItem(advancementData.getDisplayInfo().getIcon(), x, y);
+            graphics.drawItem(advancementData.displayInfo ().getIcon(), x, y);
         }
         // 指令
         else if (reward.getType().equals(ERewardType.COMMAND)) {

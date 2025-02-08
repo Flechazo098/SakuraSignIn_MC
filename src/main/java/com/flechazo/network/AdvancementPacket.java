@@ -1,15 +1,16 @@
 package com.flechazo.network;
 
 import com.flechazo.util.CollectionUtils;
+import lombok.Getter;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Getter
 public class AdvancementPacket extends SplitPacket {
     // 存储要传输的AdvancementData对象
     private final List<AdvancementData> advancements;
@@ -77,7 +78,4 @@ public class AdvancementPacket extends SplitPacket {
         return result;
     }
 
-    public List<AdvancementData> getAdvancements() {
-        return advancements;
-    }
 }

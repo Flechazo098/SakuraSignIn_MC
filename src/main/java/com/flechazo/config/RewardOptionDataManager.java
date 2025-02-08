@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -82,7 +83,7 @@ public class RewardOptionDataManager {
      * 获取配置文件路径
      */
     public static Path getConfigDirectory() {
-        return FMLPaths.CONFIGDIR.get().resolve(SakuraSignInFabric.MOD_ID);
+        return FabricLoader.getInstance().getConfigDir().resolve(SakuraSignInFabric.MOD_ID);
     }
 
     /**
@@ -134,7 +135,7 @@ public class RewardOptionDataManager {
     public static void backupRewardOption(boolean save) {
         // 备份文件
         long dateTimeInt = DateUtils.toDateTimeInt(new Date ());
-        File sourceFolder = FMLPaths.CONFIGDIR.get().resolve(SakuraSignInFabric.MOD_ID).toFile();
+        File sourceFolder = FabricLoader.getInstance().getConfigDir().resolve(SakuraSignInFabric.MOD_ID).toFile();
         try {
             File target = new File(new File(sourceFolder, "backups"), String.format("%s_%s.%s", RewardOptionDataManager.FILE_NAME, dateTimeInt, "old"));
             if (target.getParent() != null && !Files.exists(target.getParentFile().toPath())) {
@@ -1038,23 +1039,12 @@ public class RewardOptionDataManager {
      * @param op 是否管理员
      */
     public static RewardOptionSyncPacket toSyncPacket(boolean op) {
-        List<RewardOptionSyncData> dataList = new ArrayList<>();
-        for (ERewardRule rule : ERewardRule.values()) {
-            // 如果不是管理员，则过滤掉兑换码奖励
-            if (!op && rule == ERewardRule.CDK_REWARD) continue;
-            RewardOptionDataManager.getRewardMap(rule).forEach((key, value) -> {
-                List<RewardOptionSyncData> list = value.stream()
-                        .map(reward -> new RewardOptionSyncData (rule, key, reward))
-                        .toList();
-                dataList.addAll(list);
-            });
-        }
-        return new RewardOptionSyncPacket(dataList);
+        return new RewardOptionSyncPacket();
     }
 
     public static RewardOptionData fromSyncPacketList(List<RewardOptionSyncPacket> packetList) {
         RewardOptionData result = new RewardOptionData();
-        packetList.stream().flatMap(packet -> packet.getData().stream()).collect(Collectors.groupingBy(RewardOptionSyncData::rule)).forEach((rule, dataList) -> {
+        packetList.stream().flatMap(packet -> packet.getData().stream()).collect(Collectors.groupingBy(RewardOptionSyncData:: rule)).forEach((rule, dataList) -> {
             Map<String, RewardList> rewardMap = new LinkedHashMap<>();
             dataList.forEach(data -> {
                 RewardList rewardList = rewardMap.computeIfAbsent(data.key(), key -> new RewardList());

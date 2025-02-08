@@ -610,8 +610,8 @@ public class DateUtils {
 
     public static Date getValidDate(Date date) {
         // 校准客户端传过来的时间
-        Date originalTime = DateUtils.format(ServerConfig.SERVER_TIME.get());
-        Date actualTime = DateUtils.format(ServerConfig.ACTUAL_TIME.get());
+        Date originalTime = DateUtils.format(ServerConfig.getSERVER_TIME());
+        Date actualTime = DateUtils.format(ServerConfig.getACTUAL_TIME());
         if (originalTime.compareTo(actualTime) != 0) {
             date = DateUtils.addDate(date, DateUtils.dateOfTwo(originalTime, actualTime));
         }
@@ -676,12 +676,8 @@ public class DateUtils {
                 // 当到达最大单位后，将整数与小数部分填充为指定数量的9
                 StringBuilder ninePart = new StringBuilder();
                 StringBuilder decimal = new StringBuilder();
-                for (int i = 0; i < maxNineCount; i++) {
-                    ninePart.append("9");
-                }
-                for (int i = 0; i < decimalPlaces; i++) {
-                    decimal.append("9");
-                }
+                ninePart.append("9".repeat (maxNineCount));
+                decimal.append("9".repeat (decimalPlaces));
                 if (decimalPlaces > 0) {
                     result = ninePart + "." + decimal + "+" + curUnit.getUnit();
                 } else {

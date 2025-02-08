@@ -86,7 +86,7 @@ public class SignInCell {
             } else {
                 Coordinate rewardUV;
                 // 绘制奖励图标
-                if (status == ESignInStatus.SIGNED_IN.getCode() || ClientConfig.AUTO_REWARDED.get()) {
+                if (status == ESignInStatus.SIGNED_IN.getCode() || ClientConfig.getAUTO_REWARDED()) {
                     rewardUV = textureCoordinate.getSignedInUV();
                 } else {
                     rewardUV = textureCoordinate.getNotSignedInUV();

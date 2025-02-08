@@ -34,12 +34,12 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
 
     public static AdvancementData getAdvancementData(String id) {
         return SakuraSignInFabric.getAdvancementData().stream()
-                .filter(data -> data.getId().toString().equalsIgnoreCase(id))
+                .filter(data -> data.id ().toString().equalsIgnoreCase(id))
                 .findFirst().orElse(new AdvancementData(new Identifier(id), null));
     }
 
     public static String getId(AdvancementData advancementData) {
-        return getId(advancementData.getId());
+        return getId(advancementData.id ());
     }
 
     public static String getId(Advancement advancement) {
@@ -55,11 +55,11 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
     }
 
     public static @NonNull String getDisplayName(AdvancementData advancementData) {
-        return advancementData.getDisplayInfo().getTitle().getString();
+        return advancementData.displayInfo ().getTitle().getString();
     }
 
     public static @NonNull String getDescription(AdvancementData advancementData) {
-        return advancementData.getDisplayInfo().getDescription().getString();
+        return advancementData.displayInfo ().getDescription().getString();
     }
 
     public static @NonNull String getDisplayName(Advancement advancement) {
@@ -80,9 +80,9 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
         Identifier deserialize = deserialize(json);
         return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode()))
                 , SakuraSignInFabric.getAdvancementData().stream()
-                        .filter(data -> data.getId().equals(deserialize))
+                        .filter(data -> data.id ().equals(deserialize))
                         .findFirst().orElse(new AdvancementData(deserialize, null))
-                        .getDisplayInfo().getTitle().getString());
+                        .displayInfo ().getTitle().getString());
     }
 
     public @NonNull

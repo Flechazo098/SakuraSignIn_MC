@@ -87,6 +87,7 @@ public class CollectionUtils {
      * @param arrays 数据变量
      * @param <T>    对象类型
      */
+    @SafeVarargs
     public static <T> T[] mergeArrays(T[]... arrays) {
         if (arrays == null || arrays.length == 0) {
             throw new IllegalArgumentException("Input arrays must not be null or empty.");
@@ -95,11 +96,13 @@ public class CollectionUtils {
         for (T[] array : arrays) {
             totalLength += array.length;
         }
-        T[] mergedArray = Arrays.copyOf(arrays[0], totalLength);
-        int destPos = arrays[0].length;
-        for (int i = 1; i < arrays.length; i++) {
-            System.arraycopy(arrays[i], 0, mergedArray, destPos, arrays[i].length);
-            destPos += arrays[i].length;
+        // 使用反射创建正确类型的数组
+        @SuppressWarnings("unchecked")
+        T[] mergedArray = (T[]) java.lang.reflect.Array.newInstance(arrays[0].getClass().getComponentType(), totalLength);
+        int destPos = 0;
+        for (T[] array : arrays) {
+            System.arraycopy(array, 0, mergedArray, destPos, array.length);
+            destPos += array.length;
         }
         return mergedArray;
     }

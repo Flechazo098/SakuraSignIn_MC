@@ -1,6 +1,6 @@
 package com.flechazo.network;
 
-import com.flechazo.SakuraSignInFabric;
+import lombok.Getter;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
  * ItemStackPacket类用于在网络中传输ItemStack数据
  * 它提供了将ItemStack序列化和反序列化的方法,以便于网络传输
  */
+@Getter
 public class ItemStackPacket {
     private static final Logger LOGGER = LogManager.getLogger();
     
@@ -65,7 +66,4 @@ public class ItemStackPacket {
         }
     }
 
-    public ItemStack getItemStack() {
-        return itemStack;
-    }
 }

@@ -5,11 +5,13 @@ import com.flechazo.capability.PlayerSignInData;
 import com.flechazo.capability.SignInRecord;
 import com.flechazo.config.ServerConfig;
 import com.flechazo.util.CollectionUtils;
+import lombok.Getter;
 import net.minecraft.network.PacketByteBuf;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Getter
 public class PlayerDataSyncPacket extends SplitPacket {
     private final UUID playerUUID;
     private final int totalSignInDays;
@@ -94,7 +96,7 @@ public class PlayerDataSyncPacket extends SplitPacket {
 
     @Override
     public int getChunkSize() {
-        return ServerConfig.PLAYER_DATA_SYNC_PACKET_SIZE.get();
+        return ServerConfig.getPLAYER_DATA_SYNC_PACKET_SIZE();
     }
 
     /**
@@ -128,31 +130,4 @@ public class PlayerDataSyncPacket extends SplitPacket {
         return data;
     }
 
-    public UUID getPlayerUUID() {
-        return playerUUID;
-    }
-
-    public int getTotalSignInDays() {
-        return totalSignInDays;
-    }
-
-    public int getContinuousSignInDays() {
-        return continuousSignInDays;
-    }
-
-    public Date getLastSignInTime() {
-        return lastSignInTime;
-    }
-
-    public int getSignInCard() {
-        return signInCard;
-    }
-
-    public boolean isAutoRewarded() {
-        return autoRewarded;
-    }
-
-    public List<SignInRecord> getSignInRecords() {
-        return signInRecords;
-    }
 }

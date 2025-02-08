@@ -5,61 +5,73 @@ import com.flechazo.config.ClientConfig;
 import com.flechazo.rewards.RewardManager;
 import com.flechazo.screen.RewardOptionScreen;
 import com.flechazo.screen.SignInScreen;
+import com.flechazo.screen.component.IText;
 import com.flechazo.screen.component.InventoryButton;
 import com.flechazo.screen.coordinate.TextureCoordinate;
 import com.flechazo.util.*;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.text.Text;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 
-import static com.flechazo.SakuraSignInFabric.PNG_CHUNK_NAME;
-import static com.flechazo.util.I18nUtils.getI18nKey;
 
 /**
  * 客户端事件处理器
  * @author Flechazo
  */
+@Environment(EnvType.CLIENT)
 public class ClientEventHandler {
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final String CATEGORIES = "key.sakura_sign_in.categories";
+    private static final Logger LOGGER = LogManager.getLogger(SakuraSignInFabric.MOD_ID);
+    private static final String CATEGORIES = "category.sakura-sign-in.general";
 
     // 定义按键绑定
-    public static final KeyBinding SIGN_IN_SCREEN_KEY = new KeyBinding ("key.sakura_sign_in.sign_in",
-            GLFW.GLFW_KEY_H, CATEGORIES);
-    public static final KeyBinding REWARD_OPTION_SCREEN_KEY = new KeyBinding("key.sakura_sign_in.reward_option",
-            GLFW.GLFW_KEY_O, CATEGORIES);
+    public static final KeyBinding SIGN_IN_SCREEN_KEY = new KeyBinding(
+        "key.sakura-sign-in.open_sign_in_screen",
+        InputUtil.Type.KEYSYM,
+        GLFW.GLFW_KEY_K,
+        CATEGORIES
+    );
+    public static final KeyBinding REWARD_OPTION_SCREEN_KEY = new KeyBinding(
+        "key.sakura-sign-in.open_reward_option",
+        InputUtil.Type.KEYSYM,
+        GLFW.GLFW_KEY_O,
+        CATEGORIES
+    );
 
     /**
      * 注册事件处理器
      */
     public static void register() {
         // 注册按键绑定
-        KeyBindingHelper.registerKeyBinding(SIGN_IN_SCREEN_KEY);
-        KeyBindingHelper.registerKeyBinding(REWARD_OPTION_SCREEN_KEY);
+        registerKeyBindings();
 
         // 注册客户端Tick事件
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            // 检测并消费点击事件
-            if (SIGN_IN_SCREEN_KEY.wasPressed()) {
-                // 打开签到界面
-                openSignInScreen(null);
-            } else if (REWARD_OPTION_SCREEN_KEY.wasPressed()) {
-                // 打开奖励配置界面
-                MinecraftClient.getInstance().setScreen(new RewardOptionScreen());
+            while (SIGN_IN_SCREEN_KEY.wasPressed()) {
+                if (client.player != null) {
+                    client.setScreen(new SignInScreen());
+                }
+            }
+            while (REWARD_OPTION_SCREEN_KEY.wasPressed()) {
+                if (client.player != null) {
+                    client.setScreen(new RewardOptionScreen());
+                }
             }
         });
 
@@ -69,8 +81,8 @@ public class ClientEventHandler {
                 if (SakuraSignInFabric.getThemeTexture() == null) loadThemeTexture();
                 
                 // 创建按钮并添加到界面
-                String[] signInCoordinate = ClientConfig.INVENTORY_SIGN_IN_BUTTON_COORDINATE.get().split(",");
-                String[] rewardOptionCoordinate = ClientConfig.INVENTORY_REWARD_OPTION_BUTTON_COORDINATE.get().split(",");
+                String[] signInCoordinate = ClientConfig.getINVENTORY_SIGN_IN_BUTTON_COORDINATE().split(",");
+                String[] rewardOptionCoordinate = ClientConfig.getINVENTORY_REWARD_OPTION_BUTTON_COORDINATE().split(",");
                 double signInX_ = signInCoordinate.length == 2 ? StringUtils.toFloat(signInCoordinate[0]) : 0;
                 double signInY_ = signInCoordinate.length == 2 ? StringUtils.toFloat(signInCoordinate[1]) : 0;
                 double rewardOptionX_ = rewardOptionCoordinate.length == 2 ? StringUtils.toFloat(rewardOptionCoordinate[0]) : 0;
@@ -89,10 +101,10 @@ public class ClientEventHandler {
 
                 // 如果坐标发生变化则保存到配置文件
                 if (signInX_ != signInX || signInY_ != signInY) {
-                    ClientConfig.INVENTORY_SIGN_IN_BUTTON_COORDINATE.set(String.format("%.6f,%.6f", signInX, signInY));
+                    ClientConfig.setINVENTORY_SIGN_IN_BUTTON_COORDINATE(String.format("%.6f,%.6f", signInX, signInY));
                 }
                 if (rewardOptionX_ != rewardOptionX || rewardOptionY_ != rewardOptionY) {
-                    ClientConfig.INVENTORY_REWARD_OPTION_BUTTON_COORDINATE.set(String.format("%.6f,%.6f", rewardOptionX, rewardOptionY));
+                    ClientConfig.setINVENTORY_REWARD_OPTION_BUTTON_COORDINATE(String.format("%.6f,%.6f", rewardOptionX, rewardOptionY));
                 }
 
                 // 如果坐标为百分比则转换为像素坐标
@@ -110,54 +122,55 @@ public class ClientEventHandler {
                 InventoryButton signInButton = new InventoryButton((int) signInX, (int) signInY,
                         AbstractGuiUtils.ITEM_ICON_SIZE,
                         AbstractGuiUtils.ITEM_ICON_SIZE,
-                        I18nUtils.get("key.sakura_sign_in.sign_in"))
+                        IText.translatable("key.sakura_sign_in.sign_in"))
                         .setUV(SakuraSignInFabric.getThemeTextureCoordinate().getSignInBtnUV(), SakuraSignInFabric.getThemeTextureCoordinate().getTotalWidth(), SakuraSignInFabric.getThemeTextureCoordinate().getTotalHeight())
                         .setOnClick((button) -> openSignInScreen(screen))
-                        .setOnDragEnd((coordinate) -> ClientConfig.INVENTORY_SIGN_IN_BUTTON_COORDINATE.set(String.format("%.6f,%.6f", coordinate.getX(), coordinate.getY())));
+                        .setOnDragEnd((coordinate) -> ClientConfig.setINVENTORY_SIGN_IN_BUTTON_COORDINATE(String.format("%.6f,%.6f", coordinate.getX(), coordinate.getY())));
                 InventoryButton rewardOptionButton = new InventoryButton((int) rewardOptionX, (int) rewardOptionY,
                         AbstractGuiUtils.ITEM_ICON_SIZE,
                         AbstractGuiUtils.ITEM_ICON_SIZE,
-                        I18nUtils.get("key.sakura_sign_in.reward_option"))
+                        IText.translatable("key.sakura_sign_in.reward_option"))
                         .setUV(SakuraSignInFabric.getThemeTextureCoordinate().getRewardOptionBtnUV(), SakuraSignInFabric.getThemeTextureCoordinate().getTotalWidth(), SakuraSignInFabric.getThemeTextureCoordinate().getTotalHeight())
                         .setOnClick((button) -> MinecraftClient.getInstance().setScreen(new RewardOptionScreen().setPreviousScreen(screen)))
-                        .setOnDragEnd((coordinate) -> ClientConfig.INVENTORY_REWARD_OPTION_BUTTON_COORDINATE.set(String.format("%.6f,%.6f", coordinate.getX(), coordinate.getY())));
+                        .setOnDragEnd((coordinate) -> ClientConfig.setINVENTORY_REWARD_OPTION_BUTTON_COORDINATE(String.format("%.6f,%.6f", coordinate.getX(), coordinate.getY())));
 
                 // 注册按钮事件
-                ScreenEvents.beforeKeyPress(screen).register((screen1, key, scancode, modifiers) -> {
-                    signInButton.keyPressed_(key, scancode, modifiers);
-                    rewardOptionButton.keyPressed_(key, scancode, modifiers);
+                ScreenEvents.beforeTick(screen).register(screen1 -> {
+                    signInButton.tick();
+                    rewardOptionButton.tick();
                 });
 
-                ScreenEvents.beforeKeyRelease(screen).register((screen1, key, scancode, modifiers) -> {
-                    signInButton.keyReleased_(key, scancode, modifiers);
-                    rewardOptionButton.keyReleased_(key, scancode, modifiers);
-                });
-
-                ScreenEvents.beforeMouseClick(screen).register((screen1, mouseX, mouseY, button) -> {
-                    signInButton.mouseClicked_(mouseX, mouseY, button);
-                    rewardOptionButton.mouseClicked_(mouseX, mouseY, button);
-                });
-
-                ScreenEvents.beforeMouseRelease(screen).register((screen1, mouseX, mouseY, button) -> {
-                    signInButton.mouseReleased_(mouseX, mouseY, button);
-                    rewardOptionButton.mouseReleased_(mouseX, mouseY, button);
-                });
-
-                ScreenEvents.afterRender(screen).register((screen1, matrices, mouseX, mouseY, tickDelta) -> {
-                    signInButton.render_(matrices, mouseX, mouseY, tickDelta);
-                    rewardOptionButton.render_(matrices, mouseX, mouseY, tickDelta);
+                ScreenEvents.afterRender(screen).register((screen1, context, mouseX, mouseY, delta) -> {
+                    signInButton.render(context, mouseX, mouseY, delta);
+                    rewardOptionButton.render(context, mouseX, mouseY, delta);
                 });
             }
         });
     }
 
     /**
+     * 注册按键绑定
+     */
+    public static void registerKeyBindings() {
+        KeyBindingHelper.registerKeyBinding(SIGN_IN_SCREEN_KEY);
+        KeyBindingHelper.registerKeyBinding(REWARD_OPTION_SCREEN_KEY);
+    }
+
+    /**
      * 创建配置文件目录
      */
     public static void createConfigPath() {
-        File themesPath = new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignInFabric.MOD_ID).toFile(), "themes");
-        if (!themesPath.exists()) {
-            themesPath.mkdirs();
+        try {
+            Path configDir = FabricLoader.getInstance().getConfigDir().resolve(SakuraSignInFabric.MOD_ID);
+            Path themesDir = configDir.resolve("themes");
+            if (!Files.exists(configDir)) {
+                Files.createDirectories(configDir);
+            }
+            if (!Files.exists(themesDir)) {
+                Files.createDirectories(themesDir);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to create config directories", e);
         }
     }
 
@@ -165,24 +178,9 @@ public class ClientEventHandler {
      * 加载主题纹理
      */
     public static void loadThemeTexture() {
-        try {
-            SakuraSignInFabric.setThemeTexture(TextureUtils.loadCustomTexture(ClientConfig.THEME.get()));
-            SakuraSignInFabric.setSpecialVersionTheme(Boolean.TRUE.equals(ClientConfig.SPECIAL_THEME.get()));
-            InputStream inputStream = MinecraftClient.getInstance().getResourceManager().getResourceOrThrow(SakuraSignInFabric.getThemeTexture()).getInputStream();
-            SakuraSignInFabric.setThemeTextureCoordinate(PNGUtils.readLastPrivateChunk(inputStream, PNG_CHUNK_NAME));
-        } catch (IOException | ClassNotFoundException ignored) {
-        }
-        if (SakuraSignInFabric.getThemeTextureCoordinate(false) == null) {
-            // 使用默认配置
-            SakuraSignInFabric.setThemeTextureCoordinate(TextureCoordinate.getDefault());
-        }
-        // 设置内置主题特殊图标UV的偏移量
-        if (SakuraSignInFabric.isSpecialVersionTheme() && SakuraSignInFabric.getThemeTextureCoordinate().isSpecial()) {
-            SakuraSignInFabric.getThemeTextureCoordinate().getNotSignedInUV().setX(320);
-            SakuraSignInFabric.getThemeTextureCoordinate().getSignedInUV().setX(320);
-        } else {
-            SakuraSignInFabric.getThemeTextureCoordinate().getNotSignedInUV().setX(0);
-            SakuraSignInFabric.getThemeTextureCoordinate().getSignedInUV().setX(0);
+        String themePath = ClientConfig.getTHEME();
+        if (themePath != null && !themePath.isEmpty()) {
+            SakuraSignInFabric.setThemeTexture(new Identifier(SakuraSignInFabric.MOD_ID, themePath));
         }
     }
 
@@ -197,7 +195,7 @@ public class ClientEventHandler {
         } else {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.sendMessage(Text.translatable(getI18nKey("SakuraSignIn server is offline!")));
+                player.sendMessage(AbstractGuiUtils.textToComponent(IText.translatable("sakura_sign_in.message.server_offline")));
             }
         }
     }

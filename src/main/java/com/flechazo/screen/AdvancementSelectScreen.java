@@ -44,7 +44,7 @@ public class AdvancementSelectScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final List < AdvancementData > allAdvancementList = SakuraSignInFabric.getAdvancementData();
-    private final List<AdvancementData> displayableAdvancementList = SakuraSignInFabric.getAdvancementData().stream().filter(o -> o.getDisplayInfo().getIcon().getItem() != Items.AIR).toList();
+    private final List<AdvancementData> displayableAdvancementList = SakuraSignInFabric.getAdvancementData().stream().filter(o -> o.displayInfo ().getIcon().getItem() != Items.AIR).toList();
     // 每页显示行数
     private final int maxLine = 5;
 
@@ -382,8 +382,8 @@ public class AdvancementSelectScreen extends Screen {
             int lineColor = context.button().isHovered() ? 0xEEFFFFFF : 0xEE000000;
             AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 0xEE707070, 2);
             AbstractGuiUtils.fillOutLine(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), 1, lineColor, 2);
-                context.graphics().drawItem(AdvancementRewardParser.getAdvancementData((Identifier) RewardManager.deserializeReward(this.currentAdvancement)).getDisplayInfo().getIcon(), (int) context.button().getX() + 2, (int) context.button().getY() + 2);
-            context.button().setTooltip(IText.literal(AdvancementRewardParser.getAdvancementData(((Identifier) RewardManager.deserializeReward(this.currentAdvancement))).getDisplayInfo().getTitle().getString()));
+                context.graphics().drawItem(AdvancementRewardParser.getAdvancementData((Identifier) RewardManager.deserializeReward(this.currentAdvancement)).displayInfo ().getIcon(), (int) context.button().getX() + 2, (int) context.button().getY() + 2);
+            context.button().setTooltip(IText.literal(AdvancementRewardParser.getAdvancementData(((Identifier) RewardManager.deserializeReward(this.currentAdvancement))).displayInfo ().getTitle().getString()));
         }).setX(this.bgX - AbstractGuiUtils.ITEM_ICON_SIZE - 2 - margin - 3).setY(this.bgY + margin + AbstractGuiUtils.ITEM_ICON_SIZE + 4 + 1).setWidth(AbstractGuiUtils.ITEM_ICON_SIZE + 4).setHeight(AbstractGuiUtils.ITEM_ICON_SIZE + 4));
         this.OP_BUTTONS.put(OperationButtonType.PROBABILITY.getCode(), new OperationButton(OperationButtonType.PROBABILITY.getCode(), context -> {
             // 绘制背景
@@ -438,7 +438,7 @@ public class AdvancementSelectScreen extends Screen {
                     double effectY = effectBgY + i1 * (AbstractGuiUtils.ITEM_ICON_SIZE + margin);
                     // 绘制背景
                     int bgColor;
-                    if (context.button().isHovered() || advancementData.getId().toString().equalsIgnoreCase(this.currentAdvancement.toString())) {
+                    if (context.button().isHovered() || advancementData.id ().toString().equalsIgnoreCase(this.currentAdvancement.toString())) {
                         bgColor = 0xEE7CAB7C;
                     } else {
                         bgColor = 0xEE707070;
@@ -448,7 +448,7 @@ public class AdvancementSelectScreen extends Screen {
 
                     AbstractGuiUtils.fill(context.graphics(), (int) context.button().getX(), (int) context.button().getY(), (int) context.button().getWidth(), (int) context.button().getHeight(), bgColor);
                     AbstractGuiUtils.drawLimitedText(IText.literal(AdvancementRewardParser.getDisplayName(advancementData)).setGraphics(context.graphics()).setFont(this.textRenderer), context.button().getX() + AbstractGuiUtils.ITEM_ICON_SIZE + this.margin * 2, context.button().getY() + (AbstractGuiUtils.ITEM_ICON_SIZE + 4 - this.textRenderer.fontHeight) / 2.0, (int) context.button().getWidth() - AbstractGuiUtils.ITEM_ICON_SIZE - 4);
-                    context.graphics().drawItem(advancementData.getDisplayInfo().getIcon(), (int) (context.button().getX() + this.margin), (int) context.button().getY());
+                    context.graphics().drawItem(advancementData.displayInfo ().getIcon(), (int) (context.button().getX() + this.margin), (int) context.button().getY());
                     context.button().setTooltip(AdvancementRewardParser.getDisplayName(advancementData) + "\n" + AdvancementRewardParser.getDescription(advancementData));
                 } else {
                     context.button().setX(0).setY(0).setWidth(0).setHeight(0).setId("");
@@ -496,7 +496,7 @@ public class AdvancementSelectScreen extends Screen {
             if (StringUtils.isNotNullOrEmpty(bt.getId())) {
                 Identifier resourceLocation = new Identifier(bt.getId());
                 this.currentAdvancement = new Reward(resourceLocation, ERewardType.ADVANCEMENT, this.probability);
-                LOGGER.debug("Select effect: {}", AdvancementRewardParser.getAdvancementData(resourceLocation).getDisplayInfo().getTitle().getString());
+                LOGGER.debug("Select effect: {}", AdvancementRewardParser.getAdvancementData(resourceLocation).displayInfo ().getTitle().getString());
                 flag.set(true);
             }
         }

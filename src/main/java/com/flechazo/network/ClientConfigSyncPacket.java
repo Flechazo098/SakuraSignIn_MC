@@ -3,6 +3,7 @@ package com.flechazo.network;
 import com.flechazo.capability.IPlayerSignInData;
 import com.flechazo.capability.PlayerSignInDataCapability;
 import com.flechazo.config.ClientConfig;
+import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.network.PacketByteBuf;
@@ -12,6 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
  * 客户端配置同步数据包
  * @author Flechazo
  */
+@Getter
 @Environment(EnvType.CLIENT)
 public class ClientConfigSyncPacket {
     /**
@@ -20,7 +22,7 @@ public class ClientConfigSyncPacket {
     private final boolean autoRewarded;
 
     public ClientConfigSyncPacket() {
-        this.autoRewarded = ClientConfig.AUTO_REWARDED.get();
+        this.autoRewarded = ClientConfig.getAUTO_REWARDED();
     }
 
     public ClientConfigSyncPacket(PacketByteBuf buf) {
@@ -40,7 +42,4 @@ public class ClientConfigSyncPacket {
         signInData.save(player);
     }
 
-    public boolean isAutoRewarded() {
-        return autoRewarded;
-    }
 }

@@ -1,7 +1,6 @@
 package com.flechazo.screen.component;
 
 import com.flechazo.util.AbstractGuiUtils;
-import com.flechazo.util.DateUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import org.lwjgl.glfw.GLFW;
@@ -117,7 +116,7 @@ public class MouseCursor {
         int op = pressed ? 1 : -1;
         switch (button) {
             case GLFW.GLFW_MOUSE_BUTTON_LEFT:
-                this.status += 1 * op;
+                this.status += op;
                 break;
             case GLFW.GLFW_MOUSE_BUTTON_RIGHT:
                 this.status += 2 * op;

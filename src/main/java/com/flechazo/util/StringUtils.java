@@ -37,43 +37,40 @@ public class StringUtils {
      * 字符串是否为常用标点符号
      */
     public static boolean isCommonMark(String s) {
-        if (s.length() != 1) return false;
-        return COMMON_MARK.contains(s);
+        return s.length() == 1 &&   COMMON_MARK.contains (s);
     }
 
     /**
      * 根据行号截取字符串
-     * <p>(开始堆粪</p>
-     *
      * @param suffix 如果结尾还有内容, 是否需要添加的后缀, 例: "后面还有[num]行"
      */
     public static String getByLine(String s, int start, int end, String suffix) {
         if (start > end) return s;
-        String code;
-        if (s.contains("\r\n")) code = "\r\n";
-        else if (s.contains("\r")) code = "\r";
-        else if (s.contains("\n")) code = "\n";
-        else return s;
+        String lineSeparator = getLineSeparator(s);
+        if (lineSeparator == null) return s;
 
-        String[] split = s.split(code);
-        if (start > split.length) return s;
-        if (end >= split.length) {
-            StringBuilder back = new StringBuilder();
-            for (int i = start - 1; i < split.length; i++) {
-                if (i != start - 1) back.append(code);
-                back.append(split[i]);
-            }
-            return back.toString();
+        String[] lines = s.split(lineSeparator);
+        if (start > lines.length) return s;
+
+        int actualEnd = Math.min(end, lines.length);
+        StringBuilder result = new StringBuilder();
+        for (int i = start - 1; i < actualEnd; i++) {
+            if (i != start - 1) result.append(lineSeparator);
+            result.append(lines[i]);
         }
 
-        StringBuilder back = new StringBuilder();
-        for (int i = start - 1; i < end; i++) {
-            if (i != start - 1) back.append(code);
-            back.append(split[i]);
+        if (!suffix.isEmpty() && end >= lines.length) {
+            result.append(lineSeparator).append(suffix.replace("[num]", String.valueOf(lines.length - end)));
         }
-        if (!"".equals(suffix))
-            back.append(code).append(suffix.replace("[num]", split.length - end + ""));
-        return back.toString();
+
+        return result.toString();
+    }
+
+    private static String getLineSeparator(String s) {
+        if (s.contains("\r\n")) return "\r\n";
+        if (s.contains("\r")) return "\r";
+        if (s.contains("\n")) return "\n";
+        return null;
     }
 
     /**
@@ -91,20 +88,15 @@ public class StringUtils {
      * @param separator 分隔符
      */
     public static String toString(int[] a, char separator) {
-        if (a == null)
-            return "null";
-        // a = Arrays.stream(a).sorted().toArray();
-        int iMax = a.length - 1;
-        if (iMax == -1)
-            return "";
+        if (a == null) return "null";
+        if (a.length == 0) return "";
 
         StringBuilder b = new StringBuilder();
-        for (int i = 0; ; i++) {
+        for (int i = 0; i < a.length; i++) {
             b.append(a[i]);
-            if (i == iMax)
-                return b.toString();
-            b.append(separator);
+            if (i < a.length - 1) b.append(separator);
         }
+        return b.toString();
     }
 
     /**
@@ -122,27 +114,22 @@ public class StringUtils {
      * @param separator 分隔符
      */
     public static String toString(long[] a, char separator) {
-        if (a == null)
-            return "null";
-        // a = Arrays.stream(a).sorted().toArray();
-        int iMax = a.length - 1;
-        if (iMax == -1)
-            return "";
+        if (a == null) return "null";
+        if (a.length == 0) return "";
 
         StringBuilder b = new StringBuilder();
-        for (int i = 0; ; i++) {
+        for (int i = 0; i < a.length; i++) {
             b.append(a[i]);
-            if (i == iMax)
-                return b.toString();
-            b.append(separator);
+            if (i < a.length - 1) b.append(separator);
         }
+        return b.toString();
     }
 
     /**
      * 将数值集合 <code>[123456789, 234567890]</code>
      * <p>转换为形如 <code>123456789,234567890</code> 的字符串</p>
      */
-    public static String toString(Collection <?> a) {
+    public static String toString(Collection<?> a) {
         return toString(a, ',');
     }
 
@@ -153,20 +140,15 @@ public class StringUtils {
      * @param separator 分隔符
      */
     public static String toString(Collection<?> a, char separator) {
-        if (a == null)
-            return "null";
-        // a = Arrays.stream(a).sorted().toArray();
-        int iMax = a.size() - 1;
-        if (iMax == -1)
-            return "";
+        if (a == null) return "null";
+        if (a.isEmpty()) return "";
 
         StringBuilder b = new StringBuilder();
         int i = 0;
         for (Object o : a) {
             b.append(o);
             i++;
-            if (i <= iMax)
-                b.append(separator);
+            if (i < a.size()) b.append(separator);
         }
         return b.toString();
     }
@@ -175,13 +157,11 @@ public class StringUtils {
      * 转义正则特殊字符  $()*+.[]?\^{},|
      */
     public static String escapeExprSpecialWord(String keyword) {
-        if (!StringUtils.isNullOrEmpty(keyword)) {
-            String[] fbsArr = {"\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|"};
-            for (String key : fbsArr) {
-                if (keyword.contains(key)) {
-                    keyword = keyword.replace(key, "\\" + key);
-                }
-            }
+        if (isNullOrEmpty(keyword)) return keyword;
+
+        String[] specialChars = {"\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|"};
+        for (String specialChar : specialChars) {
+            keyword = keyword.replace(specialChar, "\\" + specialChar);
         }
         return keyword;
     }
@@ -192,24 +172,11 @@ public class StringUtils {
      * @param s 0|1|真|假|是|否|true|false|y|n|t|f
      */
     public static boolean stringToBoolean(String s) {
-        if (null == s) return false;
-        switch (s.toLowerCase().trim()) {
-            case "1":
-            case "真":
-            case "是":
-            case "true":
-            case "y":
-            case "t":
-                return true;
-            case "0":
-            case "假":
-            case "否":
-            case "false":
-            case "n":
-            case "f":
-            default:
-                return false;
-        }
+        if (s == null) return false;
+        return switch (s.toLowerCase ().trim ()) {
+            case "1", "真", "是", "true", "y", "t" -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -220,23 +187,19 @@ public class StringUtils {
         for (int i = 0; i < stringArray.length; i++) {
             for (int j = 0; j < stringArray[i].length; j++) {
                 sb.append(stringArray[i][j]);
-                if (j < stringArray[i].length - 1) {
-                    sb.append(x);
-                }
+                if (j < stringArray[i].length - 1) sb.append(x);
             }
-            if (i < stringArray.length - 1) {
-                sb.append(y);
-            }
+            if (i < stringArray.length - 1) sb.append(y);
         }
         return sb.toString();
     }
 
     public static boolean isNullOrEmpty(String s) {
-        return null == s || s.isEmpty();
+        return s == null || s.isEmpty();
     }
 
     public static boolean isNullOrEmptyEx(String s) {
-        return null == s || s.trim().isEmpty();
+        return s == null || s.trim().isEmpty();
     }
 
     public static boolean isNotNullOrEmpty(String s) {
@@ -256,43 +219,28 @@ public class StringUtils {
     }
 
     public static String substring(String s, int start, int end) {
-        if (isNullOrEmpty(s)) {
-            return "";
-        }
+        if (isNullOrEmpty(s)) return "";
         int length = s.length();
-        if (end < start) {
-            return s;
-        }
-        if (length >= start && length >= end) {
-            return s.substring(start, end);
-        }
-        return s;
+        if (end < start || start >= length) return s;
+        return s.substring(start, Math.min(end, length));
     }
 
     public static String substring(String s, int start) {
-        if (isNullOrEmpty(s)) {
-            return "";
-        }
+        if (isNullOrEmpty(s)) return "";
         int length = s.length();
-        if (start > length) {
-            return s;
-        }
+        if (start >= length) return s;
         return s.substring(start);
     }
 
     public static String substringEnd(String s, int len) {
-        if (isNullOrEmpty(s)) {
-            return "";
-        }
+        if (isNullOrEmpty(s)) return "";
         int length = s.length();
-        if (len > length) {
-            return s;
-        }
+        if (len >= length) return s;
         return s.substring(0, length - len);
     }
 
     public static String toString(String s, String emptyDefault) {
-        return StringUtils.isNullOrEmpty(s) ? emptyDefault : s;
+        return isNullOrEmpty(s) ? emptyDefault : s;
     }
 
     /**
@@ -310,12 +258,12 @@ public class StringUtils {
     }
 
     public static int getLineCount(String s) {
-        if (StringUtils.isNullOrEmpty(s)) return 0;
-        return StringUtils.replaceLine(s).split("\n").length;
+        if (isNullOrEmpty(s)) return 0;
+        return replaceLine(s).split("\n").length;
     }
 
     public static String getAvatarUrl(long qq, int size) {
-        return "http://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=" + size;
+        return "https://q.qlogo.cn/g?b=qq&nk=" + qq + "&s=" + size;
     }
 
     private static final String[] NUM = {"零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"};
@@ -339,57 +287,36 @@ public class StringUtils {
     public static String toChineseCapitalized(BigDecimal amount) {
         StringBuilder sb = new StringBuilder();
         int scale = amount.scale();
-        if (scale > 2) {
-            amount = amount.setScale(2, RoundingMode.HALF_UP);
-        }
+        if (scale > 2) amount = amount.setScale(2, RoundingMode.HALF_UP);
         String str = amount.toString();
         String[] parts = str.split("\\.");
         String integerPart = parts[0];
-        String decimalPart = "00";
-        if (parts.length > 1) {
-            decimalPart = parts[1];
-        }
-        int integerLen = integerPart.length();
-        int decimalLen = decimalPart.length();
-        if (integerLen == 1 && integerPart.charAt(0) == '0') {
-            sb.append(NUM[0]);
-        } else {
+        String decimalPart = parts.length > 1 ? parts[1] : "00";
+        if (decimalPart.length() == 1) decimalPart += "0";
+
+        if (integerPart.equals("0")) sb.append(NUM[0]);
+        else {
+            int integerLen = integerPart.length();
             for (int i = 0; i < integerLen; i++) {
                 int digit = integerPart.charAt(i) - '0';
                 int unitIndex = integerLen - i - 1;
                 int unit = unitIndex % 4;
                 if (digit == 0) {
-                    if (unit != 0 && sb.length() > 0 && sb.charAt(sb.length() - 1) != '零') {
-                        sb.append(NUM[0]);
-                    }
+                    if (unit != 0 && ! sb.isEmpty () && sb.charAt(sb.length() - 1) != '零') sb.append(NUM[0]);
                 } else {
-                    sb.append(NUM[digit]);
-                    sb.append(UNIT[unit]);
+                    sb.append(NUM[digit]).append(UNIT[unit]);
                 }
-                if (unit == 0 && unitIndex > 0 && sb.charAt(sb.length() - 1) != '亿') {
-                    sb.append(UNIT[unitIndex]);
-                }
+                if (unit == 0 && unitIndex > 0 && sb.charAt(sb.length() - 1) != '亿') sb.append(UNIT[unitIndex]);
             }
         }
 
         sb.append("元");
-        if (decimalLen == 1) {
-            decimalPart += "0";
-        }
-
-        // 若小数部分不为0
         if (!decimalPart.equals("00")) {
-            for (int i = 0; i < decimalLen; i++) {
+            for (int i = 0; i < decimalPart.length(); i++) {
                 int digit = decimalPart.charAt(i) - '0';
-                // 若小数位不为0
-                if (digit != 0) {
-                    sb.append(NUM[digit]);
-                    sb.append(DECIMAL[i]);
-                }
+                if (digit != 0) sb.append(NUM[digit]).append(DECIMAL[i]);
             }
-        }
-
-        if (decimalPart.equals("00")) {
+        } else {
             sb.append("整");
         }
         return sb.toString();
@@ -400,14 +327,13 @@ public class StringUtils {
     }
 
     public static int toInt(String s, int defaultValue) {
-        int result = defaultValue;
-        if (StringUtils.isNotNullOrEmpty(s)) {
+        if (isNotNullOrEmpty(s)) {
             try {
-                result = Integer.parseInt(s.trim());
+                return Integer.parseInt(s.trim());
             } catch (NumberFormatException ignored) {
             }
         }
-        return result;
+        return defaultValue;
     }
 
     public static long toLong(String s) {
@@ -415,14 +341,13 @@ public class StringUtils {
     }
 
     public static long toLong(String s, long defaultValue) {
-        long result = defaultValue;
-        if (StringUtils.isNotNullOrEmpty(s)) {
+        if (isNotNullOrEmpty(s)) {
             try {
-                result = Long.parseLong(s.trim());
+                return Long.parseLong(s.trim());
             } catch (NumberFormatException ignored) {
             }
         }
-        return result;
+        return defaultValue;
     }
 
     public static float toFloat(String s) {
@@ -430,14 +355,13 @@ public class StringUtils {
     }
 
     public static float toFloat(String s, float defaultValue) {
-        float result = defaultValue;
-        if (StringUtils.isNotNullOrEmpty(s)) {
+        if (isNotNullOrEmpty(s)) {
             try {
-                result = Float.parseFloat(s.trim());
+                return Float.parseFloat(s.trim());
             } catch (NumberFormatException ignored) {
             }
         }
-        return result;
+        return defaultValue;
     }
 
     public static double toDouble(String s) {
@@ -445,14 +369,13 @@ public class StringUtils {
     }
 
     public static double toDouble(String s, double defaultValue) {
-        double result = defaultValue;
-        if (StringUtils.isNotNullOrEmpty(s)) {
+        if (isNotNullOrEmpty(s)) {
             try {
-                result = Double.parseDouble(s.trim());
+                return Double.parseDouble(s.trim());
             } catch (NumberFormatException ignored) {
             }
         }
-        return result;
+        return defaultValue;
     }
 
     public static BigDecimal toBigDecimal(String s) {
@@ -460,14 +383,13 @@ public class StringUtils {
     }
 
     public static BigDecimal toBigDecimal(String s, BigDecimal defaultValue) {
-        BigDecimal result = defaultValue;
-        if (StringUtils.isNotNullOrEmpty(s)) {
+        if (isNotNullOrEmpty(s)) {
             try {
-                result = new BigDecimal(s.trim());
+                return new BigDecimal(s.trim());
             } catch (NumberFormatException ignored) {
             }
         }
-        return result;
+        return defaultValue;
     }
 
     /**
@@ -530,10 +452,7 @@ public class StringUtils {
      * 获取指定数量的某个字符串
      */
     public static String getString(String s, int count) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < count; i++) {
-            sb.append(s);
-        }
-        return sb.toString();
+        if (count <= 0 || s == null) return "";
+        return s.repeat (count);
     }
 }

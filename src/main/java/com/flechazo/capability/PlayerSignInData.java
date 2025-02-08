@@ -1,13 +1,19 @@
 package com.flechazo.capability;
 
 import com.flechazo.config.KeyValue;
+import com.flechazo.event.ServerEventHandler;
 import com.flechazo.util.CollectionUtils;
 import com.flechazo.util.DateUtils;
+import dev.onyxstudios.cca.api.v3.component.Component;
+import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
+import dev.onyxstudios.cca.api.v3.component.ComponentProvider;
+import dev.onyxstudios.cca.api.v3.entity.PlayerComponent;
 import lombok.NonNull;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,8 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 玩家签到数据
+ * @author Flechazo
  */
-public class PlayerSignInData implements IPlayerSignInData{
+public class PlayerSignInData implements IPlayerSignInData, Component, AutoSyncedComponent, PlayerComponent<PlayerSignInData> {
     private final AtomicInteger totalSignInDays = new AtomicInteger();
     private final AtomicInteger continuousSignInDays = new AtomicInteger();
     private Date lastSignInTime;
@@ -82,7 +89,6 @@ public class PlayerSignInData implements IPlayerSignInData{
         return this.signInCard.incrementAndGet();
     }
 
-
     @Override
     public int plusSignInCard(int num) {
         return this.signInCard.addAndGet(num);
@@ -115,7 +121,7 @@ public class PlayerSignInData implements IPlayerSignInData{
 
     @Override
     public @NonNull List<SignInRecord> getSignInRecords() {
-        return signInRecords = CollectionUtils.isNullOrEmpty(signInRecords) ? new ArrayList <> () : signInRecords;
+        return signInRecords = CollectionUtils.isNullOrEmpty(signInRecords) ? new ArrayList<>() : signInRecords;
     }
 
     @Override
@@ -136,7 +142,7 @@ public class PlayerSignInData implements IPlayerSignInData{
     public void writeToBuffer(PacketByteBuf buffer) {
         buffer.writeInt(this.getTotalSignInDays());
         buffer.writeInt(this.getContinuousSignInDays());
-        buffer.writeString (DateUtils.toDateTimeString(this.getLastSignInTime()));
+        buffer.writeString(DateUtils.toDateTimeString(this.getLastSignInTime()));
         buffer.writeInt(this.getSignInCard());
         buffer.writeBoolean(this.isAutoRewarded());
         buffer.writeInt(this.getSignInRecords().size());
@@ -178,9 +184,7 @@ public class PlayerSignInData implements IPlayerSignInData{
     }
 
     @Override
-    public NbtCompound serializeNBT() {
-        // 创建一个CompoundNBT对象，并将玩家的分数和活跃状态写入其中
-        NbtCompound tag = new NbtCompound();
+    public void writeToNbt(NbtCompound tag) {
         tag.putInt("totalSignInDays", this.getTotalSignInDays());
         tag.putInt("continuousSignInDays", this.getContinuousSignInDays());
         tag.putString("lastSignInTime", DateUtils.toDateTimeString(this.getLastSignInTime()));
@@ -199,14 +203,13 @@ public class PlayerSignInData implements IPlayerSignInData{
             cdkErrorRecordNBT.putString("key", record.getKey());
             cdkErrorRecordNBT.putString("date", DateUtils.toDateTimeString(record.getValue().getKey()));
             cdkErrorRecordNBT.putBoolean("value", record.getValue().getValue());
+            cdkRecordsNBT.add(cdkErrorRecordNBT);
         }
         tag.put("cdkRecords", cdkRecordsNBT);
-        return tag;
     }
 
     @Override
-    public void deserializeNBT(NbtCompound nbt) {
-        // 从NBT标签中读取玩家的分数和活跃状态，并更新到实例中
+    public void readFromNbt(NbtCompound nbt) {
         this.setTotalSignInDays(nbt.getInt("totalSignInDays"));
         this.setContinuousSignInDays(nbt.getInt("continuousSignInDays"));
         this.setLastSignInTime(DateUtils.format(nbt.getString("lastSignInTime")));
@@ -229,7 +232,31 @@ public class PlayerSignInData implements IPlayerSignInData{
     }
 
     @Override
+    public NbtCompound serializeNBT() {
+        NbtCompound tag = new NbtCompound();
+        writeToNbt(tag);
+        return tag;
+    }
+
+    @Override
+    public void deserializeNBT(NbtCompound nbt) {
+        readFromNbt(nbt);
+    }
+
+    @Override
     public void save(ServerPlayerEntity player) {
-        player.getCapability(PlayerSignInDataCapability.PLAYER_DATA).ifPresent(this::copyFrom);
+        if (player instanceof ComponentProvider provider) {
+            provider.getComponent(ServerEventHandler.PLAYER_DATA).copyFrom(this);
+        }
+    }
+
+    @Override
+    public boolean shouldCopyForRespawn(boolean lossless, boolean keepInventory, boolean sameCharacter) {
+        return true; // 玩家重生时保留签到数据
+    }
+
+    @Override
+    public void copyForRespawn(@NotNull PlayerSignInData original, boolean lossless, boolean keepInventory, boolean sameCharacter) {
+        this.copyFrom(original);
     }
 }

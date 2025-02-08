@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.flechazo.util.I18nUtils.getByZh;
-import static com.flechazo.util.I18nUtils.getI18nKey;
+import static com.flechazo.util.I18nUtils.get;
 
 public class SignInCommand {
 
@@ -109,9 +109,9 @@ public class SignInCommand {
             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
             try {
                 String string = StringArgumentType.getString(context, "date");
-                if (ServerConfig.SIGN_IN_CARD.get() && "all".equalsIgnoreCase(string)) {
+                if (ServerConfig.getSIGN_IN_CARD() && "all".equalsIgnoreCase(string)) {
                     int days = 0;
-                    for (int i = 1; i <= ServerConfig.RE_SIGN_IN_DAYS.get() && days < signInData.getSignInCard(); i++) {
+                    for (int i = 1; i <= ServerConfig.getRE_SIGN_IN_DAYS() && days < signInData.getSignInCard(); i++) {
                         Date date = DateUtils.addDay(DateUtils.getServerDate(), -i);
                         if (signInData.getSignInRecords().stream().noneMatch(data -> DateUtils.toDateInt(data.getCompensateTime()) == DateUtils.toDateInt(date))) {
                             signInTimeList.add(new KeyValue<>(DateUtils.format(DateUtils.toString(date)), ESignInType.RE_SIGN_IN));
@@ -158,9 +158,9 @@ public class SignInCommand {
             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
             try {
                 String string = StringArgumentType.getString(context, "date");
-                if (ServerConfig.SIGN_IN_CARD.get() && "all".equalsIgnoreCase(string)) {
+                if (ServerConfig.getSIGN_IN_CARD() && "all".equalsIgnoreCase(string)) {
                     int days = 0;
-                    for (int i = 1; i <= ServerConfig.RE_SIGN_IN_DAYS.get() && days < signInData.getSignInCard(); i++) {
+                    for (int i = 1; i <= ServerConfig.getRE_SIGN_IN_DAYS() && days < signInData.getSignInCard(); i++) {
                         Date date = DateUtils.addDay(DateUtils.getServerDate(), -i);
                         if (signInData.getSignInRecords().stream().noneMatch(data -> DateUtils.toDateInt(data.getCompensateTime()) == DateUtils.toDateInt(date))) {
                             signInTimeList.add(new KeyValue<>(date, ESignInType.RE_SIGN_IN));
@@ -342,10 +342,10 @@ public class SignInCommand {
                 .then(CommandManager.literal("card")
                         .executes(context -> {
                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                            if (!ServerConfig.SIGN_IN_CARD.get()) {
-                                player.sendMessage(Text.translatable(getI18nKey("服务器补签功能被禁用了哦。")));
+                            if (!ServerConfig.getSIGN_IN_CARD()) {
+                                player.sendMessage(Text.translatable(get("服务器补签功能被禁用了哦。")));
                             } else {
-                                player.sendMessage(Text.translatable(getI18nKey("当前拥有%d张补签卡"), PlayerSignInDataCapability.getData(player).getSignInCard()));
+                                player.sendMessage(Text.translatable(get("当前拥有%d张补签卡"), PlayerSignInDataCapability.getData(player).getSignInCard()));
                             }
                             return 1;
                         })
@@ -364,7 +364,7 @@ public class SignInCommand {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(signInData.getSignInCard() + num);
-                                            player.sendMessage(Text.translatable(getI18nKey("给予%d张补签卡"), num));
+                                            player.sendMessage(Text.translatable(get("给予%d张补签卡"), num));
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
@@ -375,7 +375,7 @@ public class SignInCommand {
                                                     for (ServerPlayerEntity player : players) {
                                                         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                         signInData.setSignInCard(signInData.getSignInCard() + num);
-                                                        player.sendMessage(Text.translatable(getI18nKey("获得%d张补签卡"), num));
+                                                        player.sendMessage(Text.translatable(get("获得%d张补签卡"), num));
                                                         PlayerSignInDataCapability.syncPlayerData(player);
                                                     }
                                                     return 1;
@@ -400,7 +400,7 @@ public class SignInCommand {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                             signInData.setSignInCard(num);
-                                            player.sendMessage(Text.translatable(getI18nKey("补签卡被设置为了%d张"), num));
+                                            player.sendMessage(Text.translatable(get("补签卡被设置为了%d张"), num));
                                             PlayerSignInDataCapability.syncPlayerData(player);
                                             return 1;
                                         })
@@ -411,7 +411,7 @@ public class SignInCommand {
                                                     for (ServerPlayerEntity player : players) {
                                                         IPlayerSignInData signInData = PlayerSignInDataCapability.getData(player);
                                                         signInData.setSignInCard(num);
-                                                        player.sendMessage(Text.translatable(getI18nKey("补签卡被设置为了%d张"), num));
+                                                        player.sendMessage(Text.translatable(get("补签卡被设置为了%d张"), num));
                                                         PlayerSignInDataCapability.syncPlayerData(player);
                                                     }
                                                     return 1;
@@ -428,7 +428,7 @@ public class SignInCommand {
                                             ServerPlayerEntity target = EntityArgumentType.getPlayer(context, "player");
                                             IPlayerSignInData signInData = PlayerSignInDataCapability.getData(target);
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey("玩家[%s]拥有%d张补签卡"), target.getDisplayName().getString(), signInData.getSignInCard()));
+                                            player.sendMessage(Text.translatable(get("玩家[%s]拥有%d张补签卡"), target.getDisplayName().getString(), signInData.getSignInCard()));
                                             PlayerSignInDataCapability.syncPlayerData(target);
                                             return 1;
                                         })
@@ -442,88 +442,88 @@ public class SignInCommand {
                                 .then(CommandManager.literal("autoSignIn")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey(String.format("服务器已%s自动签到", ServerConfig.AUTO_SIGN_IN.get() ? "启用" : "禁用"))));
+                                            player.sendMessage(Text.translatable(get(String.format("服务器已%s自动签到", ServerConfig.getAUTO_SIGN_IN() ? "启用" : "禁用"))));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("timeCoolingMethod")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
-                                            player.sendMessage(Text.translatable(getI18nKey("服务器签到时间冷却方式为: %s"), coolingMethod.name()));
+                                            ETimeCoolingMethod coolingMethod = ServerConfig.getTIME_COOLING_METHOD();
+                                            player.sendMessage(Text.translatable(get("服务器签到时间冷却方式为: %s"), coolingMethod.name()));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("timeCoolingTime")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            Double time = ServerConfig.TIME_COOLING_TIME.get();
-                                            player.sendMessage(Text.translatable(getI18nKey("服务器签到冷却刷新时间为: %05.2f"), time));
+                                            Double time = ServerConfig.getTIME_COOLING_TIME();
+                                            player.sendMessage(Text.translatable(get("服务器签到冷却刷新时间为: %05.2f"), time));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("timeCoolingInterval")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            Double time = ServerConfig.TIME_COOLING_INTERVAL.get();
-                                            player.sendMessage(Text.translatable(getI18nKey("服务器签到冷却刷新间隔为: %05.2f"), time));
+                                            Double time = ServerConfig.getTIME_COOLING_INTERVAL();
+                                            player.sendMessage(Text.translatable(get("服务器签到冷却刷新间隔为: %05.2f"), time));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("signInCard")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey(String.format("服务器已%s补签卡", ServerConfig.SIGN_IN_CARD.get() ? "启用" : "禁用"))));
+                                            player.sendMessage(Text.translatable(get(String.format("服务器已%s补签卡", ServerConfig.getSIGN_IN_CARD() ? "启用" : "禁用"))));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("reSignInDays")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            int time = ServerConfig.RE_SIGN_IN_DAYS.get();
-                                            player.sendMessage(Text.translatable(getI18nKey("服务器最大补签天数为: %d"), time));
+                                            int time = ServerConfig.getRE_SIGN_IN_DAYS();
+                                            player.sendMessage(Text.translatable(get("服务器最大补签天数为: %d"), time));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("signInCardOnlyBaseReward")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey(String.format("服务器已%s补签仅获得基础奖励", ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get() ? "启用" : "禁用"))));
+                                            player.sendMessage(Text.translatable(get(String.format("服务器已%s补签仅获得基础奖励", ServerConfig.getSIGN_IN_CARD_ONLY_BASE_REWARD() ? "启用" : "禁用"))));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("date")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey("服务器当前时间: %s"), DateUtils.toDateTimeString(DateUtils.getServerDate())));
+                                            player.sendMessage(Text.translatable(get("服务器当前时间: %s"), DateUtils.toDateTimeString(DateUtils.getServerDate())));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("playerDataSyncPacketSize")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey("玩家签到数据同步网络包大小为: %d"), ServerConfig.PLAYER_DATA_SYNC_PACKET_SIZE.get()));
+                                            player.sendMessage(Text.translatable(get("玩家签到数据同步网络包大小为: %d"), ServerConfig.getPLAYER_DATA_SYNC_PACKET_SIZE()));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("rewardAffectedByLuck")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey(String.format("服务器已%s奖励领取受幸运影响", ServerConfig.REWARD_AFFECTED_BY_LUCK.get() ? "启用" : "禁用"))));
+                                            player.sendMessage(Text.translatable(get(String.format("服务器已%s奖励领取受幸运影响", ServerConfig.getREWARD_AFFECTED_BY_LUCK() ? "启用" : "禁用"))));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("continuousRewardsRepeatable")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey(String.format("服务器已%s连续签到奖励持续领取", ServerConfig.CONTINUOUS_REWARDS_REPEATABLE.get() ? "启用" : "禁用"))));
+                                            player.sendMessage(Text.translatable(get(String.format("服务器已%s连续签到奖励持续领取", ServerConfig.getCONTINUOUS_REWARDS_REPEATABLE() ? "启用" : "禁用"))));
                                             return 1;
                                         })
                                 )
                                 .then(CommandManager.literal("cycleRewardsRepeatable")
                                         .executes(context -> {
                                             ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                            player.sendMessage(Text.translatable(getI18nKey(String.format("服务器已%s循环签到奖励持续领取", ServerConfig.CYCLE_REWARDS_REPEATABLE.get() ? "启用" : "禁用"))));
+                                            player.sendMessage(Text.translatable(get(String.format("服务器已%s循环签到奖励持续领取", ServerConfig.getCYCLE_REWARDS_REPEATABLE() ? "启用" : "禁用"))));
                                             return 1;
                                         })
                                 )
@@ -538,10 +538,10 @@ public class SignInCommand {
                                                     String string = StringArgumentType.getString(context, "datetime");
                                                     long datetime = getRelativeLong(string, "datetime");
                                                     Date date = DateUtils.getDate(datetime);
-                                                    ServerConfig.SERVER_TIME.set(DateUtils.toDateTimeString(new Date()));
-                                                    ServerConfig.ACTUAL_TIME.set(DateUtils.toDateTimeString(date));
+                                                    ServerConfig.setSERVER_TIME(DateUtils.toDateTimeString(new Date()));
+                                                    ServerConfig.setACTUAL_TIME(DateUtils.toDateTimeString(date));
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器时间已设置为: %s"), DateUtils.toDateTimeString(date)));
+                                                    broadcastMessage(player, Text.translatable(get("服务器时间已设置为: %s"), DateUtils.toDateTimeString(date)));
                                                     return 1;
                                                 })
                                         )
@@ -552,9 +552,9 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     String boolString = StringArgumentType.getString(context, "bool");
                                                     boolean bool = StringUtils.stringToBoolean(boolString);
-                                                    ServerConfig.AUTO_SIGN_IN.set(bool);
+                                                    ServerConfig.setAUTO_SIGN_IN(bool);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器已%s自动签到"), bool ? "启用" : "禁用"));
+                                                    broadcastMessage(player, Text.translatable(get("服务器已%s自动签到"), bool ? "启用" : "禁用"));
                                                     return 1;
                                                 })
                                         )
@@ -565,9 +565,9 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     String boolString = StringArgumentType.getString(context, "bool");
                                                     boolean bool = StringUtils.stringToBoolean(boolString);
-                                                    ServerConfig.SIGN_IN_CARD.set(bool);
+                                                    ServerConfig.setSIGN_IN_CARD(bool);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器已%s补签卡"), bool ? "启用" : "禁用"));
+                                                    broadcastMessage(player, Text.translatable(get("服务器已%s补签卡"), bool ? "启用" : "禁用"));
                                                     return 1;
                                                 })
                                         )
@@ -583,9 +583,9 @@ public class SignInCommand {
                                                 })
                                                 .executes(context -> {
                                                     int days = IntegerArgumentType.getInteger(context, "days");
-                                                    ServerConfig.RE_SIGN_IN_DAYS.set(days);
+                                                    ServerConfig.setRE_SIGN_IN_DAYS(days);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器最大补签天数已被设置为: %d"), days));
+                                                    broadcastMessage(player, Text.translatable(get("服务器最大补签天数已被设置为: %d"), days));
                                                     return 1;
                                                 })
                                         )
@@ -596,9 +596,9 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     String boolString = StringArgumentType.getString(context, "bool");
                                                     boolean bool = StringUtils.stringToBoolean(boolString);
-                                                    ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.set(bool);
+                                                    ServerConfig.setSIGN_IN_CARD_ONLY_BASE_REWARD(bool);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器已%s补签仅获得基础奖励"), bool ? "启用" : "禁用"));
+                                                    broadcastMessage(player, Text.translatable(get("服务器已%s补签仅获得基础奖励"), bool ? "启用" : "禁用"));
                                                     return 1;
                                                 })
                                         )
@@ -613,9 +613,9 @@ public class SignInCommand {
                                                 })
                                                 .executes(context -> {
                                                     String method = StringArgumentType.getString(context, "method");
-                                                    ServerConfig.TIME_COOLING_METHOD.set(ETimeCoolingMethod.valueOf(method));
+                                                    ServerConfig.setTIME_COOLING_METHOD(ETimeCoolingMethod.valueOf(method));
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器签到时间冷却方式已被设置为: %s"), method));
+                                                    broadcastMessage(player, Text.translatable(get("服务器签到时间冷却方式已被设置为: %s"), method));
                                                     return 1;
                                                 })
                                         )
@@ -633,9 +633,9 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     double time = DoubleArgumentType.getDouble(context, "time");
                                                     SignInCommand.checkTime(time);
-                                                    ServerConfig.TIME_COOLING_TIME.set(time);
+                                                    ServerConfig.setTIME_COOLING_TIME(time);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器签到冷却刷新时间已被设置为: %05.2f"), time));
+                                                    broadcastMessage(player, Text.translatable(get("服务器签到冷却刷新时间已被设置为: %05.2f"), time));
                                                     return 1;
                                                 })
                                         )
@@ -652,9 +652,9 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     double time = DoubleArgumentType.getDouble(context, "time");
                                                     SignInCommand.checkTime(time);
-                                                    ServerConfig.TIME_COOLING_INTERVAL.set(time);
+                                                    ServerConfig.setTIME_COOLING_INTERVAL(time);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器签到冷却刷新间隔已被设置为: %05.2f"), time));
+                                                    broadcastMessage(player, Text.translatable(get("服务器签到冷却刷新间隔已被设置为: %05.2f"), time));
                                                     return 1;
                                                 })
                                         )
@@ -670,9 +670,9 @@ public class SignInCommand {
                                                 })
                                                 .executes(context -> {
                                                     int size = IntegerArgumentType.getInteger(context, "size");
-                                                    ServerConfig.PLAYER_DATA_SYNC_PACKET_SIZE.set(size);
+                                                    ServerConfig.setPLAYER_DATA_SYNC_PACKET_SIZE(size);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("玩家签到数据同步网络包大小已被设置为: %d"), size));
+                                                    broadcastMessage(player, Text.translatable(get("玩家签到数据同步网络包大小已被设置为: %d"), size));
                                                     return 1;
                                                 })
                                         )
@@ -683,9 +683,9 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     String boolString = StringArgumentType.getString(context, "bool");
                                                     boolean bool = StringUtils.stringToBoolean(boolString);
-                                                    ServerConfig.REWARD_AFFECTED_BY_LUCK.set(bool);
+                                                    ServerConfig.setREWARD_AFFECTED_BY_LUCK(bool);
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器已%s奖励领取受幸运影响"), bool ? "启用" : "禁用"));
+                                                    broadcastMessage(player, Text.translatable(get("服务器已%s奖励领取受幸运影响"), bool ? "启用" : "禁用"));
                                                     return 1;
                                                 })
                                         )
@@ -696,10 +696,10 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     String boolString = StringArgumentType.getString(context, "bool");
                                                     boolean bool = StringUtils.stringToBoolean(boolString);
-                                                    ServerConfig.CONTINUOUS_REWARDS_REPEATABLE.set(bool);
+                                                    ServerConfig.setCONTINUOUS_REWARDS_REPEATABLE(bool);
                                                     RewardOptionDataManager.getRewardOptionData().refreshContinuousRewardsRelation();
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器已%s连续签到奖励持续领取"), bool ? "启用" : "禁用"));
+                                                    broadcastMessage(player, Text.translatable(get("服务器已%s连续签到奖励持续领取"), bool ? "启用" : "禁用"));
                                                     return 1;
                                                 })
                                         )
@@ -710,10 +710,10 @@ public class SignInCommand {
                                                 .executes(context -> {
                                                     String boolString = StringArgumentType.getString(context, "bool");
                                                     boolean bool = StringUtils.stringToBoolean(boolString);
-                                                    ServerConfig.CYCLE_REWARDS_REPEATABLE.set(bool);
+                                                    ServerConfig.setCYCLE_REWARDS_REPEATABLE(bool);
                                                     RewardOptionDataManager.getRewardOptionData().refreshCycleRewardsRelation();
                                                     ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-                                                    broadcastMessage(player, Text.translatable(getI18nKey("服务器已%s循环签到奖励持续领取"), bool ? "启用" : "禁用"));
+                                                    broadcastMessage(player, Text.translatable(get("服务器已%s循环签到奖励持续领取"), bool ? "启用" : "禁用"));
                                                     return 1;
                                                 })
                                         )

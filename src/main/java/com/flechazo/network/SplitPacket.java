@@ -1,11 +1,15 @@
 package com.flechazo.network;
 
 import com.flechazo.SakuraSignInFabric;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.network.PacketByteBuf;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Setter
+@Getter
 public abstract class SplitPacket {
     private static final long CACHE_EXPIRE_TIME = 1000 * 60 * 5; // 缓存过期时间为5分钟
 
@@ -54,7 +58,7 @@ public abstract class SplitPacket {
 
     private static void cleanExpiredCache(Map<String, List<? extends SplitPacket>> packetCache) {
         packetCache.keySet().stream()
-                .filter(key -> isExpired(key))
+                .filter(SplitPacket :: isExpired)
                 .forEach(packetCache::remove);
     }
 
@@ -70,27 +74,4 @@ public abstract class SplitPacket {
 
     public abstract int getChunkSize();
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public int getTotal() {
-        return total;
-    }
-
-    public void setTotal(int total) {
-        this.total = total;
-    }
-
-    public int getSort() {
-        return sort;
-    }
-
-    public void setSort(int sort) {
-        this.sort = sort;
-    }
 }

@@ -17,19 +17,22 @@ import com.flechazo.screen.component.OperationButton;
 import com.flechazo.screen.component.PopupOption;
 import com.flechazo.screen.coordinate.TextureCoordinate;
 import com.flechazo.util.*;
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -44,12 +47,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.flechazo.screen.SignInScreen.OperationButtonType.*;
 import static com.flechazo.util.I18nUtils.getByZh;
-import static com.flechazo.util.I18nUtils.getI18nKey;
+import static com.flechazo.util.I18nUtils.get;
 
 @Environment  ( EnvType.CLIENT)
 public class SignInScreen extends Screen{
 
-    private final List< Drawable > drawables = Lists.newArrayList();
     private static final Logger LOGGER = LogManager.getLogger();
     // region 变量定义
 
@@ -61,7 +63,7 @@ public class SignInScreen extends Screen{
     @Accessors (chain = true)
     private Screen previousScreen;
 
-    private boolean SIGN_IN_SCREEN_TIPS = Boolean.TRUE.equals(ClientConfig.SHOW_SIGN_IN_SCREEN_TIPS.get());
+    private boolean SIGN_IN_SCREEN_TIPS = Boolean.TRUE.equals(ClientConfig.getSHOW_SIGN_IN_SCREEN_TIPS());
 
     private IText tips;
 
@@ -184,7 +186,7 @@ public class SignInScreen extends Screen{
         ButtonWidget notAgain = AbstractGuiUtils.newButton(0, 0, 0, 20,
                 AbstractGuiUtils.textToComponent(IText.i18n("不再提醒")), button -> {
                     this.SIGN_IN_SCREEN_TIPS = false;
-                    ClientConfig.SHOW_SIGN_IN_SCREEN_TIPS.set(false);
+                    ClientConfig.setSHOW_SIGN_IN_SCREEN_TIPS(false);
                 });
         super.addDrawableChild(submit);
         super.addDrawableChild(notAgain);
@@ -322,8 +324,8 @@ public class SignInScreen extends Screen{
             Map<Integer, RewardList > monthRewardList = RewardManager.getMonthRewardList(current, signInData, lastOffset, nextOffset);
 
             boolean allCurrentDaysDisplayed = false;
-            boolean showLastReward = ClientConfig.SHOW_LAST_REWARD.get();
-            boolean showNextReward = ClientConfig.SHOW_NEXT_REWARD.get();
+            boolean showLastReward = ClientConfig.getSHOW_LAST_REWARD();
+            boolean showNextReward = ClientConfig.getSHOW_NEXT_REWARD();
             for (int row = 0; row < rows; row++) {
                 if (allCurrentDaysDisplayed && !showNextReward) break;
                 for (int col = 0; col < columns; col++) {
@@ -379,9 +381,9 @@ public class SignInScreen extends Screen{
                     // if (CollectionUtils.isNullOrEmpty(rewards)) continue;
 
                     // 是否能补签
-                    if (ServerConfig.SIGN_IN_CARD.get()) {
+                    if (ServerConfig.getSIGN_IN_CARD()) {
                         // 最早能补签的日期
-                        Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.RE_SIGN_IN_DAYS.get());
+                        Date minDate = DateUtils.addDay(compensateDate, -ServerConfig.getRE_SIGN_IN_DAYS());
                         if (DateUtils.toDateInt(minDate) <= key && key <= DateUtils.toDateInt(compensateDate) && status != ESignInStatus.NOT_SIGNED_IN.getCode()) {
                             status = ESignInStatus.CAN_REPAIR.getCode();
                         }
@@ -430,13 +432,13 @@ public class SignInScreen extends Screen{
         double yearX = bgX + SakuraSignInFabric.getThemeTextureCoordinate().getYearCoordinate().getX() * this.scale;
         double yearY = bgY + SakuraSignInFabric.getThemeTextureCoordinate().getYearCoordinate().getY() * this.scale;
         String yearTitle = DateUtils.toLocalStringYear(SakuraSignInFabric.getCalendarCurrentDate(), MinecraftClient.getInstance().options.language);
-        graphics.drawTextWrapped(super.textRenderer, yearTitle, (int) yearX, (int) yearY, SakuraSignInFabric.getThemeTextureCoordinate().getTextColorDate(), false);
+        graphics.drawText(super.textRenderer, yearTitle, (int) yearX, (int) yearY, SakuraSignInFabric.getThemeTextureCoordinate().getTextColorDate(), false);
 
         // 渲染月份
         double monthX = bgX + SakuraSignInFabric.getThemeTextureCoordinate().getMonthCoordinate().getX() * this.scale;
         double monthY = bgY + SakuraSignInFabric.getThemeTextureCoordinate().getMonthCoordinate().getY() * this.scale;
         String monthTitle = DateUtils.toLocalStringMonth(SakuraSignInFabric.getCalendarCurrentDate(), MinecraftClient.getInstance().options.language);
-        graphics.drawCenteredTextWithShadow(super.textRenderer, monthTitle, (int) monthX, (int) monthY, SakuraSignInFabric.getThemeTextureCoordinate().getTextColorDate(), false);
+        graphics.drawText(super.textRenderer, monthTitle, (int) monthX, (int) monthY, SakuraSignInFabric.getThemeTextureCoordinate().getTextColorDate(), false);
 
         // 渲染操作按钮
         for (Integer op : BUTTONS.keySet()) {
@@ -560,14 +562,14 @@ public class SignInScreen extends Screen{
 
             int buttonWidth = Math.min(100, AbstractGuiUtils.multilineTextWidth(tips) / 2 - 5);
 
-            for (Drawable drawable : drawables) {
-                if (drawable instanceof ButtonWidget button) {
+            for (Element child : this.children()) {
+                if (child instanceof ButtonWidget button) {
                     String buttonText = button.getMessage().getString();
                     boolean isConfirmButton = buttonText.equalsIgnoreCase(IText.i18n("确认").getContent());
                     boolean isDontShowAgainButton = buttonText.equalsIgnoreCase(IText.i18n("不再提醒").getContent());
 
                     if (isConfirmButton || isDontShowAgainButton) {
-                        ButtonWidget newButton = new ButtonWidget.Builder(button.getMessage(), null)
+                        ButtonWidget newButton = ButtonWidget.builder(button.getMessage(), null)
                                 .position(isConfirmButton ? (int)x : (int)(x + AbstractGuiUtils.multilineTextWidth(tips) - buttonWidth),
                                         (int)(y + AbstractGuiUtils.multilineTextHeight(tips) + 4))
                                 .size(buttonWidth, 20)
@@ -612,13 +614,13 @@ public class SignInScreen extends Screen{
                 ClientPlayerEntity player = MinecraftClient.getInstance().player;
                 String selectedFile = themeFileList.get(popupOption.getSelectedIndex()).getPath();
                 if (player != null) {
-                    player.sendMessage(Text.translatable(getI18nKey("已选择主题文件: %s"), selectedFile));
-                    ClientConfig.THEME.set(selectedFile);
+                    player.sendMessage(Text.translatable(get("已选择主题文件: %s"), selectedFile));
+                    ClientConfig.setTHEME(selectedFile);
                     updateTextureAndCoordinate.set(true);
                     updateLayout.set(true);
                 }
             } else {
-                SakuraSignInFabric.openFileInFolder(new File(FMLPaths.CONFIGDIR.get().resolve(SakuraSignInFabric.MOD_ID).toFile(), "themes").toPath());
+                SakuraSignInFabric.openFileInFolder(new File(FabricLoader.getInstance().getConfigDir().resolve(SakuraSignInFabric.MOD_ID).toFile(), "themes").toPath());
             }
             popupOption.clear();
         }
@@ -698,8 +700,8 @@ public class SignInScreen extends Screen{
         // 类原版主题
         else if (value.getOperation() == OperationButtonType.THEME_ORIGINAL_BUTTON.getCode()) {
             SakuraSignInFabric.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-            ClientConfig.THEME.set(OperationButtonType.THEME_ORIGINAL_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(SakuraSignInFabric.isSpecialVersionTheme());
+            ClientConfig.setTHEME(OperationButtonType.THEME_ORIGINAL_BUTTON.getPath());
+            ClientConfig.setSPECIAL_THEME(SakuraSignInFabric.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -707,8 +709,8 @@ public class SignInScreen extends Screen{
         // 樱花粉主题
         else if (value.getOperation() == OperationButtonType.THEME_SAKURA_BUTTON.getCode()) {
             SakuraSignInFabric.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-            ClientConfig.THEME.set(OperationButtonType.THEME_SAKURA_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(SakuraSignInFabric.isSpecialVersionTheme());
+            ClientConfig.setTHEME(OperationButtonType.THEME_SAKURA_BUTTON.getPath());
+            ClientConfig.setSPECIAL_THEME(SakuraSignInFabric.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -716,8 +718,8 @@ public class SignInScreen extends Screen{
         // 四叶草主题
         else if (value.getOperation() == OperationButtonType.THEME_CLOVER_BUTTON.getCode()) {
             SakuraSignInFabric.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-            ClientConfig.THEME.set(OperationButtonType.THEME_CLOVER_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(SakuraSignInFabric.isSpecialVersionTheme());
+            ClientConfig.setTHEME(OperationButtonType.THEME_CLOVER_BUTTON.getPath());
+            ClientConfig.setSPECIAL_THEME(SakuraSignInFabric.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -725,8 +727,8 @@ public class SignInScreen extends Screen{
         // 枫叶主题
         else if (value.getOperation() == OperationButtonType.THEME_MAPLE_BUTTON.getCode()) {
             SakuraSignInFabric.setSpecialVersionTheme(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT);
-            ClientConfig.THEME.set(OperationButtonType.THEME_MAPLE_BUTTON.getPath());
-            ClientConfig.SPECIAL_THEME.set(SakuraSignInFabric.isSpecialVersionTheme());
+            ClientConfig.setTHEME(OperationButtonType.THEME_MAPLE_BUTTON.getPath());
+            ClientConfig.setSPECIAL_THEME(SakuraSignInFabric.isSpecialVersionTheme());
             updateLayout.set(true);
             updateTexture.set(true);
             flag.set(true);
@@ -734,7 +736,7 @@ public class SignInScreen extends Screen{
         // 混沌主题
         else if (value.getOperation() == OperationButtonType.THEME_CHAOS_BUTTON.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                ClientConfig.THEME.set(OperationButtonType.THEME_CHAOS_BUTTON.getPath());
+                ClientConfig.setTHEME(OperationButtonType.THEME_CHAOS_BUTTON.getPath());
                 updateLayout.set(true);
                 updateTexture.set(true);
                 flag.set(true);
@@ -765,44 +767,53 @@ public class SignInScreen extends Screen{
         if (cell.status == ESignInStatus.NOT_SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 if (RewardManager.getCompensateDateInt() < DateUtils.toDateInt(RewardManager.getCompensateDate(new Date()))) {
-                    player.sendMessage(Text.translatable(getI18nKey("前面的的日期以后再来探索吧。")));
+                    player.sendMessage(Text.translatable(get("前面的的日期以后再来探索吧。")));
                 } else {
-                    cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket (new Date(), ClientConfig.AUTO_REWARDED.get(), ESignInType.SIGN_IN));
+                    cell.status = ClientConfig.getAUTO_REWARDED() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    SignInPacket packet = new SignInPacket(new Date(), ClientConfig.getAUTO_REWARDED(), ESignInType.SIGN_IN);
+                    packet.toBytes(buf);
+                    ClientPlayNetworking.send(ModNetworkHandler.SIGN_IN, buf);
                 }
             }
         } else if (cell.status == ESignInStatus.SIGNED_IN.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                player.sendMessage(Text.translatable(getI18nKey("已经签过到了哦。")));
+                player.sendMessage(Text.translatable(get("已经签过到了哦。")));
             } else {
                 if (RewardManager.isRewarded(PlayerSignInDataCapability.getData(player), cellDate, false)) {
-                    player.sendMessage(Text.translatable(getI18nKey("不论怎么点也不会获取俩次奖励吧。")));
+                    player.sendMessage(Text.translatable(get("不论怎么点也不会获取俩次奖励吧。")));
                 } else {
                     cell.status = ESignInStatus.REWARDED.getCode();
-                    ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.REWARD));
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    SignInPacket packet = new SignInPacket(cellDate, ClientConfig.getAUTO_REWARDED(), ESignInType.REWARD);
+                    packet.toBytes(buf);
+                    ClientPlayNetworking.send(ModNetworkHandler.SIGN_IN, buf);
                 }
             }
         } else if (cell.status == ESignInStatus.CAN_REPAIR.getCode()) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                if (! ServerConfig.SIGN_IN_CARD.get()) {
-                    player.sendMessage(Text.translatable(getI18nKey("服务器补签功能被禁用了哦。")));
+                if (! ServerConfig.getSIGN_IN_CARD()) {
+                    player.sendMessage(Text.translatable(get("服务器补签功能被禁用了哦。")));
                 } else {
                     if (PlayerSignInDataCapability.getData(player).getSignInCard() <= 0) {
-                        player.sendMessage(Text.translatable(getI18nKey("补签卡不足了哦。")));
+                        player.sendMessage(Text.translatable(get("补签卡不足了哦。")));
                     } else {
-                        cell.status = ClientConfig.AUTO_REWARDED.get() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
-                        ModNetworkHandler.INSTANCE.sendToServer(new SignInPacket(cellDate, ClientConfig.AUTO_REWARDED.get(), ESignInType.RE_SIGN_IN));
+                        cell.status = ClientConfig.getAUTO_REWARDED() ? ESignInStatus.REWARDED.getCode() : ESignInStatus.SIGNED_IN.getCode();
+                        PacketByteBuf buf = PacketByteBufs.create();
+                        SignInPacket packet = new SignInPacket(cellDate, ClientConfig.getAUTO_REWARDED(), ESignInType.RE_SIGN_IN);
+                        packet.toBytes(buf);
+                        ClientPlayNetworking.send(ModNetworkHandler.SIGN_IN, buf);
                     }
                 }
             }
         } else if (cell.status == ESignInStatus.NO_ACTION.getCode()) {
             if (cellDate.after(RewardManager.getCompensateDate(new Date()))) {
-                player.sendMessage(Text.translatable(getI18nKey("前面的的日期以后再来探索吧。")));
+                player.sendMessage(Text.translatable(get("前面的的日期以后再来探索吧。")));
             } else {
-                player.sendMessage(Text.translatable(getI18nKey("过去的的日期怎么想也回不去了吧。")));
+                player.sendMessage(Text.translatable(get("过去的的日期怎么想也回不去了吧。")));
             }
         } else if (cell.status == ESignInStatus.REWARDED.getCode()) {
-            player.sendMessage(Text.translatable(getI18nKey("不论怎么点也不会获取俩次奖励吧。")));
+            player.sendMessage(Text.translatable(get("不论怎么点也不会获取两次奖励吧。")));
         } else {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 player.sendMessage(Text.literal(ESignInStatus.valueOf(cell.status).getDescription() + ": " + DateUtils.toString(cellDate)));

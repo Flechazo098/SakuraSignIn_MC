@@ -12,9 +12,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,9 +19,8 @@ import java.util.function.Consumer;
 
 @Getter
 @Setter
-@Accessors (chain = true)
+@Accessors(chain = true)
 public class InventoryButton extends ClickableWidget {
-    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * 按钮是否被按下
@@ -57,14 +53,14 @@ public class InventoryButton extends ClickableWidget {
     /**
      * 按钮点击事件
      */
-    private Consumer <InventoryButton> onClick;
+    private Consumer<InventoryButton> onClick;
     /**
      * 当鼠标拖动结束
      */
-    private Consumer< Coordinate > onDragEnd;
+    private Consumer<Coordinate> onDragEnd;
 
-    public InventoryButton(int x, int y, int width, int height, String title) {
-        super(x, y, width, height, Text.of(title));
+    public InventoryButton(int x, int y, int width, int height, IText title) {
+        super(x, y, width, height, AbstractGuiUtils.textToComponent(title));
         this.x_ = x;
         this.y_ = y;
     }
@@ -86,10 +82,6 @@ public class InventoryButton extends ClickableWidget {
     @Override
     @ParametersAreNonnullByDefault
     public void render(DrawContext graphics, int mouseX, int mouseY, float partialTicks) {
-        // 重写并且啥也不干
-    }
-
-    public void render_(DrawContext graphics, int mouseX, int mouseY, float partialTicks) {
         // 无法直接监听鼠标移动事件, 直接在绘制时调用
         this.mouseMoved(mouseX, mouseY);
         Screen screen = MinecraftClient.getInstance().currentScreen;
@@ -111,17 +103,19 @@ public class InventoryButton extends ClickableWidget {
             } else {
                 text = IText.literal(String.format("X: %d\nY: %d", super.getX(), super.getY()));
             }
-            AbstractGuiUtils.drawPopupMessage(text.setGraphics(graphics), super.getX() + (AbstractGuiUtils.multilineTextWidth(text) - this.width) / 2, super.getY() + this.height / 2, screenWidth, screenHeight);
+            text.setGraphics(graphics);
+            AbstractGuiUtils.drawPopupMessage(text, super.getX() + (AbstractGuiUtils.multilineTextWidth(text) - this.width) / 2, super.getY() + this.height / 2, screenWidth, screenHeight);
         } else if (this.hovered) {
             if (this.modifiers == GLFW.GLFW_MOD_SHIFT) {
-                AbstractGuiUtils.drawPopupMessage(IText.i18n("按住Ctrl或Alt键可拖动按钮\nCtrl: 绝对位置坐标\nAlt: 屏幕百分比位置").setGraphics(graphics), mouseX, mouseY, screenWidth, screenHeight);
+                AbstractGuiUtils.drawPopupMessage(IText.translatable("sakura_sign_in.tooltip.button_drag").setGraphics(graphics), mouseX, mouseY, screenWidth, screenHeight);
             } else {
                 AbstractGuiUtils.drawPopupMessage(AbstractGuiUtils.componentToText(this.getMessage().copy()).setGraphics(graphics), mouseX, mouseY, screenWidth, screenHeight);
             }
         }
     }
 
-    public boolean mouseClicked_(double mouseX, double mouseY, int button) {
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.pressed = this.isMouseOver(mouseX, mouseY);
         this.mouseButton = button;
         this.mouseClickX = (int) mouseX;
@@ -129,7 +123,8 @@ public class InventoryButton extends ClickableWidget {
         return this.pressed;
     }
 
-    public boolean mouseReleased_(double mouseX, double mouseY, int button) {
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         boolean flag = false;
         this.hovered = this.isMouseOver(mouseX, mouseY);
         if (this.pressed && this.mouseDrag) {
@@ -181,13 +176,15 @@ public class InventoryButton extends ClickableWidget {
         super.mouseMoved(mouseX, mouseY);
     }
 
-    public boolean keyPressed_(int keyCode, int scanCode, int modifiers) {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         this.keyCode = keyCode;
         this.modifiers = modifiers;
         return false;
     }
 
-    public boolean keyReleased_(int keyCode, int scanCode, int modifiers) {
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         this.keyCode = -1;
         this.modifiers = -1;
         return false;
@@ -200,7 +197,12 @@ public class InventoryButton extends ClickableWidget {
 
     @Override
     @ParametersAreNonnullByDefault
-    public void renderButton(DrawContext graphics, int i, int i1, float v) {
+    public void renderButton(DrawContext graphics, int mouseX, int mouseY, float delta) {
+        this.render(graphics, mouseX, mouseY, delta);
+    }
+
+    public void tick() {
+        // 用于更新按钮状态
     }
 
     /**

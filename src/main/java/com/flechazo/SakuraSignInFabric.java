@@ -5,6 +5,8 @@ import com.flechazo.config.ClientConfig;
 import com.flechazo.config.RewardOptionDataManager;
 import com.flechazo.config.ServerConfig;
 import com.flechazo.event.ClientEventHandler;
+import com.flechazo.event.ModEventHandler;
+import com.flechazo.event.ServerEventHandler;
 import com.flechazo.network.AdvancementData;
 import com.flechazo.network.ModNetworkHandler;
 import com.flechazo.network.SplitPacket;
@@ -16,7 +18,6 @@ import lombok.Setter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.api.ModInitializer;
-
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -24,7 +25,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraftforge.fml.config.ModConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,13 +36,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public class SakuraSignInFabric implements ModInitializer {
 	public static final String MOD_ID = "sakura-sign-in";
 	public static final String PNG_CHUNK_NAME = "vacb";
-
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-
 
 	/**
 	 * 是否有对应的服务端
@@ -110,6 +107,14 @@ public class SakuraSignInFabric implements ModInitializer {
 
 	@Override
 	public void onInitialize(){
+		// 初始化配置
+		ServerConfig.init();
+		ClientConfig.init();
+
+		// 注册事件处理器
+		ModEventHandler.register();
+		ServerEventHandler.register();
+		ClientEventHandler.register();
 
 		// 注册网络通道
 		ModNetworkHandler.registerPackets();
@@ -135,53 +140,31 @@ public class SakuraSignInFabric implements ModInitializer {
 	}
 
 	private void onServerStopping(MinecraftServer server) {
-		// RewardOptionDataManager.saveRewardOption();
+		RewardOptionDataManager.saveRewardOption();
+		LOGGER.debug("SignIn data saved.");
 	}
 
 	private void handlePlayerLogout(PlayerEntity player) {
 		LOGGER.debug("Player has logged out.");
-		// 处理玩家登出逻辑
+		if (player != null) {
+			playerCapabilityStatus.remove(player.getUuid().toString());
+			if (MinecraftClient.getInstance().player != null && 
+				MinecraftClient.getInstance().player.getUuid().equals(player.getUuid())) {
+				enabled = false;
+			}
 		}
+	}
 
 	public static TextureCoordinate getThemeTextureCoordinate(boolean nonNull) {
-		if (nonNull && (themeTextureCoordinate == null || themeTexture == null)) ClientEventHandler.loadThemeTexture();
+		if (nonNull && (themeTextureCoordinate == null || themeTexture == null)) {
+			ClientEventHandler.loadThemeTexture();
+		}
 		return themeTextureCoordinate;
 	}
 
 	@NonNull
 	public static TextureCoordinate getThemeTextureCoordinate() {
 		return getThemeTextureCoordinate(true);
-	}
-
-	/**
-	 * 在客户端设置阶段触发的事件处理方法
-	 * 此方法主要用于接收 FML 客户端设置事件，并执行相应的初始化操作
-	 */
-	@SubscribeEvent
-	public void onClientSetup(final FMLClientSetupEvent event) {
-		// 创建配置文件目录
-		ClientEventHandler.createConfigPath();
-	}
-
-
-	/**
-	 * 玩家注销事件
-	 *
-	 * @param event 玩家注销事件对象，通过该对象可以获取到注销的玩家对象
-	 */
-	@SubscribeEvent
-	public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-		LOGGER.debug("Player has logged out.");
-		// 获取退出的玩家对象
-		PlayerEntity player = player.get.getEntity();
-		// 判断是否在客户端并且退出的玩家是客户端的当前玩家
-		if (player.getCommandSenderWorld().isClientSide) {
-            if (MinecraftClient.getInstance ().player != null && MinecraftClient.getInstance ().player.getUuid ().equals (player.getUuid ())) {
-                LOGGER.debug ("Current player has logged out.");
-                // 当前客户端玩家与退出的玩家相同
-                enabled = false;
-            }
-        }
 	}
 
 	/**

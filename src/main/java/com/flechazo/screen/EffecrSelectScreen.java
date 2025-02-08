@@ -10,7 +10,6 @@ import com.flechazo.screen.component.IText;
 import com.flechazo.screen.component.OperationButton;
 import com.flechazo.util.AbstractGuiUtils;
 import com.flechazo.util.CollectionUtils;
-import com.flechazo.util.RegistryUtils;
 import com.flechazo.util.StringUtils;
 import com.google.gson.JsonObject;
 import lombok.Getter;

@@ -7,6 +7,7 @@ import com.flechazo.config.RewardOptionDataManager;
 import com.flechazo.config.StringList;
 import com.flechazo.enums.ERewardRule;
 import com.flechazo.enums.ERewardType;
+import com.flechazo.event.ClientEventHandler;
 import com.flechazo.network.ModNetworkHandler;
 import com.flechazo.network.RewardOptionSyncPacket;
 import com.flechazo.rewards.Reward;
@@ -21,6 +22,9 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -30,6 +34,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -596,17 +601,14 @@ public class RewardOptionScreen extends Screen {
         // 上传奖励配置
         else if (value.getOperation() == OperationButtonType.UPLOAD.getCode()) {
             // 仅管理员可上传
-            // TODO Forge->Fabric
-            if (! MinecraftClient.getInstance().isInSingleplayer()) {
-                ClientPlayerEntity player = MinecraftClient.getInstance().player;
-                if (player != null) {
-                    if (player.hasPermissionLevel(3)) {
-                        for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket(player.hasPermissionLevel(3)).Chopping ()) {
-                            ModNetworkHandler.INSTANCE.sendToServer(rewardOptionSyncPacket);
-                        }
-                        flag.set(true);
-                    }
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null && player.hasPermissionLevel(3)) {
+                for (RewardOptionSyncPacket rewardOptionSyncPacket : RewardOptionDataManager.toSyncPacket(player.hasPermissionLevel(3)).Chopping()) {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    rewardOptionSyncPacket.toBytes(buf);
+                    ClientPlayNetworking.send(ModNetworkHandler.REWARD_OPTION_SYNC, buf);
                 }
+                flag.set(true);
             }
         }
         // 下载奖励配置
@@ -616,7 +618,8 @@ public class RewardOptionScreen extends Screen {
                     // 备份签到奖励配置
                     RewardOptionDataManager.backupRewardOption();
                     // 同步签到奖励配置到客户端
-                    ModNetworkHandler.INSTANCE.sendToServer(new DownloadRewardOptionNotice ());
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    ClientPlayNetworking.send(ModNetworkHandler.REWARD_OPTION_SYNC, buf);
                     flag.set(true);
                 }
             }
@@ -630,7 +633,7 @@ public class RewardOptionScreen extends Screen {
         }
         // 打开配置文件夹
         else if (value.getOperation() == OperationButtonType.FOLDER.getCode()) {
-            SakuraSignInFabric.openFileInFolder(new File (FMLPaths.CONFIGDIR.get().resolve(SakuraSignInFabric.MOD_ID).toFile(), RewardOptionDataManager.FILE_NAME).toPath());
+            SakuraSignInFabric.openFileInFolder(new File (FabricLoader.getInstance().getConfigDir().resolve(SakuraSignInFabric.MOD_ID).toFile(), RewardOptionDataManager.FILE_NAME).toPath());
             flag.set(true);
         }
     }

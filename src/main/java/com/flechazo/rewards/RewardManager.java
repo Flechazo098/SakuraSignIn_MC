@@ -43,7 +43,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static com.flechazo.util.I18nUtils.getByZh;
-import static com.flechazo.util.I18nUtils.getI18nKey;
+import static com.flechazo.util.I18nUtils.get;
 
 /**
  * 奖励管理器
@@ -154,8 +154,8 @@ public class RewardManager {
             date = DateUtils.getServerDate();
         }
         // 签到冷却刷新时间, 固定间隔不需要校准时间
-        double cooling = switch (ServerConfig.TIME_COOLING_METHOD.get()) {
-            case MIXED, FIXED_TIME -> ServerConfig.TIME_COOLING_TIME.get();
+        double cooling = switch (ServerConfig.getTIME_COOLING_METHOD()) {
+            case MIXED, FIXED_TIME -> ServerConfig.getTIME_COOLING_TIME();
             default -> 0;
         };
         // 校准后当前时间
@@ -174,8 +174,8 @@ public class RewardManager {
             date = DateUtils.getServerDate();
         }
         // 签到冷却刷新时间, 固定间隔不需要校准时间
-        double cooling = switch (ServerConfig.TIME_COOLING_METHOD.get()) {
-            case MIXED, FIXED_TIME -> ServerConfig.TIME_COOLING_TIME.get();
+        double cooling = switch (ServerConfig.getTIME_COOLING_METHOD()) {
+            case MIXED, FIXED_TIME -> ServerConfig.getTIME_COOLING_TIME();
             default -> 0;
         };
         // 校准后当前时间
@@ -279,7 +279,7 @@ public class RewardManager {
         }
         // 若日期小于当前日期 且 补签仅计算基础奖励
         else {
-            if (!onlyHistory && key < nowCompensate8 && ServerConfig.SIGN_IN_CARD_ONLY_BASE_REWARD.get()) {
+            if (!onlyHistory && key < nowCompensate8 && ServerConfig.getSIGN_IN_CARD_ONLY_BASE_REWARD()) {
                 // 基础奖励
                 result.addAll(serverData.getBaseRewards());
                 // 累计签到奖励
@@ -397,11 +397,7 @@ public class RewardManager {
                                     StatusEffectInstance statusEffectInstance = RewardManager.deserializeReward(reward);
                                     key = Registries.STATUS_EFFECT.getKey(statusEffectInstance.getEffectType()).toString() + " " + statusEffectInstance.getAmplifier();
                                     break;
-                                case EXP_POINT:
-                                    break;
-                                case EXP_LEVEL:
-                                    break;
-                                case SIGN_IN_CARD:
+                                case EXP_POINT, EXP_LEVEL, SIGN_IN_CARD:
                                     break;
                                 case ADVANCEMENT:
                                 case MESSAGE:
@@ -478,47 +474,47 @@ public class RewardManager {
         int clientCompensateDateInt = DateUtils.toDateInt(clientCompensateDate);
         LOGGER.debug("SignIn: serverCompensateDate: {}, clientCompensateDate: {}", DateUtils.toDateTimeString(serverCompensateDate), DateUtils.toDateTimeString(clientCompensateDate));
 
-        ETimeCoolingMethod coolingMethod = ServerConfig.TIME_COOLING_METHOD.get();
+        ETimeCoolingMethod coolingMethod = ServerConfig.getTIME_COOLING_METHOD();
         // 判断签到/补签时间合法性
         if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt < clientCompensateDateInt) {
-            player.sendMessage(Text.translatable(getI18nKey("签到日期晚于服务器当前日期，签到失败")));
+            player.sendMessage(Text.translatable(get("签到日期晚于服务器当前日期，签到失败")));
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt > clientCompensateDateInt) {
-            player.sendMessage(Text.translatable(getI18nKey("签到日期早于服务器当前日期，签到失败")));
+            player.sendMessage(Text.translatable(get("签到日期早于服务器当前日期，签到失败")));
             return;
         } else if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInRecords().stream().anyMatch(record -> DateUtils.toDateInt(record.getCompensateTime()) == clientCompensateDateInt)) {
-            player.sendMessage(Text.translatable(getI18nKey("已经签过到了哦")));
+            player.sendMessage(Text.translatable(get("已经签过到了哦")));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && serverCompensateDateInt <= clientCompensateDateInt) {
-            player.sendMessage(Text.translatable(getI18nKey("补签日期需早于服务器当前日期，补签失败")));
+            player.sendMessage(Text.translatable(get("补签日期需早于服务器当前日期，补签失败")));
             return;
         }
         // 判断签到CD
         if (ESignInType.SIGN_IN.equals(packet.getSignInType()) && coolingMethod.getCode() >= ETimeCoolingMethod.FIXED_INTERVAL.getCode()) {
-            Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.TIME_COOLING_INTERVAL.get());
+            Date lastSignInTime = DateUtils.addDate(signInData.getLastSignInTime(), ServerConfig.getTIME_COOLING_INTERVAL());
             if (clientDate.before(lastSignInTime)) {
-                player.sendMessage(Text.translatable(getI18nKey("签到冷却中，签到失败，请稍后再试")));
+                player.sendMessage(Text.translatable(get("签到冷却中，签到失败，请稍后再试")));
                 return;
             }
         }
         // 判断补签
-        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.SIGN_IN_CARD.get()) {
-            player.sendMessage(Text.translatable(getI18nKey("服务器补签功能被禁用了哦，补签失败")));
+        if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && !ServerConfig.getSIGN_IN_CARD()) {
+            player.sendMessage(Text.translatable(get("服务器补签功能被禁用了哦，补签失败")));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && signInData.getSignInCard() <= 0) {
-            player.sendMessage(Text.translatable(getI18nKey("补签卡不足，补签失败")));
+            player.sendMessage(Text.translatable(get("补签卡不足，补签失败")));
             return;
         } else if (ESignInType.RE_SIGN_IN.equals(packet.getSignInType()) && isSignedIn(signInData, clientCompensateDate, false)) {
-            player.sendMessage(Text.translatable(getI18nKey("已经签过到了哦")));
+            player.sendMessage(Text.translatable(get("已经签过到了哦")));
             return;
         }
         // 判断领取奖励
         if (ESignInType.REWARD.equals(packet.getSignInType())) {
             if (isRewarded(signInData, clientCompensateDate, false)) {
-                player.sendMessage(Text.translatable(getI18nKey("%s的奖励已经领取过啦"), DateUtils.toString(clientCompensateDate)));
+                player.sendMessage(Text.translatable(get("%s的奖励已经领取过啦"), DateUtils.toString(clientCompensateDate)));
                 return;
             } else if (!isSignedIn(signInData, clientCompensateDate, false)) {
-                player.sendMessage(Text.translatable(getI18nKey("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！"), DateUtils.toString(clientCompensateDate)));
+                player.sendMessage(Text.translatable(get("没有查询到[%s]的签到记录哦，鉴定为阁下没有签到！"), DateUtils.toString(clientCompensateDate)));
                 return;
             } else {
                 MutableText msg = Text.literal(getByZh("奖励领取详情:"));
@@ -583,7 +579,7 @@ public class RewardManager {
             signInData.getSignInRecords().add(signInRecord);
             signInData.setContinuousSignInDays(DateUtils.calculateContinuousDays(signInData.getSignInRecords().stream().map(SignInRecord::getCompensateTime).collect(Collectors.toList()), serverCompensateDate));
             signInData.plusTotalSignInDays();
-            player.sendMessage(Text.translatable(getI18nKey("%s 签到成功, %s/%s"), DateUtils.toString(signInRecord.getCompensateTime()), signInData.getContinuousSignInDays(), getTotalSignInDays(signInData)));
+            player.sendMessage(Text.translatable(get("%s 签到成功, %s/%s"), DateUtils.toString(signInRecord.getCompensateTime()), signInData.getContinuousSignInDays(), getTotalSignInDays(signInData)));
         }
         // PlayerSignInDataCapability.setData(player, signInData);
         signInData.save(player);
@@ -595,7 +591,7 @@ public class RewardManager {
         reward.setRewarded(true);
         Object object = RewardManager.deserializeReward(reward);
         // 判断是否启用
-        if (ServerConfig.REWARD_AFFECTED_BY_LUCK.get()) {
+        if (ServerConfig.getREWARD_AFFECTED_BY_LUCK()) {
             int offset = player.getStatusEffects().stream()
                     .filter(instance -> instance.getEffectType() == StatusEffects.LUCK || instance.getEffectType() == StatusEffects.UNLUCK)
                     .map(instance -> {

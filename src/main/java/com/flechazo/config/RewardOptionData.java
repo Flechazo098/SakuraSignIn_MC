@@ -203,7 +203,7 @@ public class RewardOptionData implements Serializable {
         if (!this.continuousRewards.isEmpty()) {
             this.continuousRewardsRelation = new LinkedHashMap<>();
             List<Integer> keyList = this.continuousRewards.keySet().stream().map(Integer::parseInt).sorted().toList();
-            if (ServerConfig.CONTINUOUS_REWARDS_REPEATABLE.get()) {
+            if (ServerConfig.getCONTINUOUS_REWARDS_REPEATABLE()) {
                 int max = keyList.stream().max(Comparator.naturalOrder()).orElse(0);
                 int cur = keyList.get(0);
                 for (int i = 1; i <= max; i++) {
@@ -251,7 +251,7 @@ public class RewardOptionData implements Serializable {
         if (!this.cycleRewards.isEmpty()) {
             this.cycleRewardsRelation = new LinkedHashMap<>();
             List<Integer> keyList = this.cycleRewards.keySet().stream().map(Integer::parseInt).sorted().toList();
-            if (ServerConfig.CYCLE_REWARDS_REPEATABLE.get()) {
+            if (ServerConfig.getCYCLE_REWARDS_REPEATABLE()) {
                 int max = keyList.stream().max(Comparator.naturalOrder()).orElse(0);
                 int cur = keyList.get(0);
                 for (int i = 1; i <= max; i++) {

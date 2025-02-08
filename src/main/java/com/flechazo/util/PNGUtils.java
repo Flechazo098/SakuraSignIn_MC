@@ -496,7 +496,7 @@ public class PNGUtils {
         // 关闭解压缩流，释放资源
         inflater.close();
         // 将解压缩后的字节流转换为字符串，并使用UTF-8编码
-        return baos.toString(StandardCharsets.UTF_8.toString());
+        return baos.toString(StandardCharsets.UTF_8);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.flechazo.capability;
 
 import dev.onyxstudios.cca.api.v3.component.Component;
 import dev.onyxstudios.cca.api.v3.component.sync.AutoSyncedComponent;
+import lombok.Setter;
 import net.minecraft.nbt.NbtCompound;
 
 /**
@@ -9,8 +10,14 @@ import net.minecraft.nbt.NbtCompound;
  * 用于管理和序列化玩家的签到数据
  * @author Flechazo
  */
+@Setter
 public class PlayerSignInDataProvider implements Component, AutoSyncedComponent {
 
+    /**
+     * -- SETTER --
+     *  设置玩家签到数据
+     *
+     */
     // 玩家签到数据实例，使用PlayerSignInData类进行管理
     private IPlayerSignInData playerData;
 
@@ -59,12 +66,4 @@ public class PlayerSignInDataProvider implements Component, AutoSyncedComponent 
         return getOrCreateData();
     }
 
-    /**
-     * 设置玩家签到数据
-     *
-     * @param data 要设置的玩家签到数据
-     */
-    public void setPlayerData(IPlayerSignInData data) {
-        this.playerData = data;
-    }
 }
