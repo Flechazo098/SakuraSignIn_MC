@@ -5,6 +5,8 @@ import com.flechazo.util.DateUtils;
 import lombok.Data;
 import lombok.NonNull;
 import net.minecraft.nbt.NbtCompound;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,7 +14,9 @@ import java.util.Date;
 import static com.flechazo.config.RewardOptionDataManager.GSON;
 
 @Data
-public class SignInRecord implements Serializable, Cloneable{
+public class SignInRecord implements Serializable, Cloneable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SignInRecord.class);
+
     /**
      * 补偿后时间(签到时间+签到冷却刷新时间)
      */
@@ -42,18 +46,18 @@ public class SignInRecord implements Serializable, Cloneable{
         this.compensateTime = new Date();
         this.signInTime = new Date();
         this.signInUUID = "";
+        this.rewarded = false;
         this.rewardList = new RewardList();
     }
-
 
     // 序列化到 NBT
     public NbtCompound writeToNBT() {
         NbtCompound tag = new NbtCompound();
-        tag.putString("compensateTime", DateUtils.toDateTimeString(compensateTime));
-        tag.putString("signInTime", DateUtils.toDateTimeString(signInTime));
-        tag.putString("signInUUID", signInUUID);
+        tag.putString("compensateTime", DateUtils.toDateTimeString(compensateTime != null ? compensateTime : new Date()));
+        tag.putString("signInTime", DateUtils.toDateTimeString(signInTime != null ? signInTime : new Date()));
+        tag.putString("signInUUID", signInUUID != null ? signInUUID : "");
         tag.putBoolean("rewarded", rewarded);
-        tag.putString("rewardList", GSON.toJson(rewardList));
+        tag.putString("rewardList", GSON.toJson(rewardList != null ? rewardList : new RewardList()));
         return tag;
     }
 
@@ -68,7 +72,15 @@ public class SignInRecord implements Serializable, Cloneable{
 
         // 反序列化奖励列表
         String rewardListString = tag.getString("rewardList");
-        record.rewardList = GSON.fromJson(rewardListString, RewardList.class);
+        try {
+            record.rewardList = GSON.fromJson(rewardListString, RewardList.class);
+            if (record.rewardList == null) {
+                record.rewardList = new RewardList();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to deserialize reward list: {}", e.getMessage());
+            record.rewardList = new RewardList();
+        }
         return record;
     }
 
@@ -76,11 +88,11 @@ public class SignInRecord implements Serializable, Cloneable{
     public SignInRecord clone() {
         try {
             SignInRecord cloned = (SignInRecord) super.clone();
-            cloned.compensateTime = (Date) this.compensateTime.clone();
-            cloned.signInTime = (Date) this.signInTime.clone();
-            cloned.signInUUID = this.signInUUID;
+            cloned.compensateTime = (Date) (this.compensateTime != null ? this.compensateTime.clone() : new Date());
+            cloned.signInTime = (Date) (this.signInTime != null ? this.signInTime.clone() : new Date());
+            cloned.signInUUID = this.signInUUID != null ? this.signInUUID : "";
             cloned.rewarded = this.rewarded;
-            cloned.rewardList = this.rewardList.clone();
+            cloned.rewardList = this.rewardList != null ? this.rewardList.clone() : new RewardList();
             return cloned;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();

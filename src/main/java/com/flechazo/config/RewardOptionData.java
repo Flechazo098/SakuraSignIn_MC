@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 @Data
 public class RewardOptionData implements Serializable {
-    public static final String DATE_RANGE_REGEX1 = "(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})(?:[T ](\\d{1,2}):(\\d{1,2}):(\\d{1,2}))?";
+    public static final String DATE_RANGE_REGEX1 = "(\\d{4})[-/](\\d{1,2})[-/](\\d{1,2})(?:[T ](\\d{1,2}):(\\d{1,2}):(\\d{1,2})|[ ](\\d{1,2}):(\\d{1,2}))?";
     public static final String DATE_RANGE_REGEX2 = "(\\d{4})(?:~(\\d+))?[-/](\\d{1,2})(?:~(\\d+))?[-/](\\d{1,2})(?:~(\\d+))?";
     public static final String REWARD_RULE_KEY_REGEX = "(?:(?:" + DATE_RANGE_REGEX1 + ")|(?:" + DATE_RANGE_REGEX2 + ")|(?:" + "-?\\d{4}" + "))";
 

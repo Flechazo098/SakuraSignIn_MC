@@ -1,6 +1,8 @@
 package com.flechazo.network;
 
 import com.flechazo.SakuraSignInFabric;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.util.Identifier;
@@ -34,6 +36,7 @@ public class ModNetworkHandler {
         });
     }
 
+    @Environment(EnvType.CLIENT)
     public static void registerS2CPackets() {
         ClientPlayNetworking.registerGlobalReceiver(ADVANCEMENT, (client, handler, buf, responseSender) -> {
             AdvancementPacket packet = new AdvancementPacket(buf);
@@ -56,6 +59,5 @@ public class ModNetworkHandler {
      */
     public static void registerPackets() {
         registerC2SPackets();
-        registerS2CPackets();
     }
 }

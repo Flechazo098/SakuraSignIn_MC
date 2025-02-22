@@ -11,6 +11,10 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.advancement.AdvancementDisplay;
 import net.minecraft.util.Identifier;
 
+/**
+ * 进度奖励解析器
+ * @author Flechazo
+ */
 public class AdvancementRewardParser implements RewardParser < Identifier > {
 
     @Override
@@ -28,18 +32,28 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
     @Override
     public JsonObject serialize(Identifier reward) {
         JsonObject json = new JsonObject();
-        json.addProperty("advancement", reward.toString());
+        try {
+            if (reward != null) {
+                json.addProperty("advancement", reward.toString());
+            } else {
+                LOGGER.error("Attempted to serialize null advancement ID");
+                json.addProperty("advancement", SakuraSignInFabric.MOD_ID + ":unknownAdvancement");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to serialize advancement reward", e);
+            json.addProperty("advancement", SakuraSignInFabric.MOD_ID + ":unknownAdvancement");
+        }
         return json;
     }
 
     public static AdvancementData getAdvancementData(String id) {
         return SakuraSignInFabric.getAdvancementData().stream()
-                .filter(data -> data.id ().toString().equalsIgnoreCase(id))
+                .filter(data -> data.id().toString().equalsIgnoreCase(id))
                 .findFirst().orElse(new AdvancementData(new Identifier(id), null));
     }
 
     public static String getId(AdvancementData advancementData) {
-        return getId(advancementData.id ());
+        return getId(advancementData.id());
     }
 
     public static String getId(Advancement advancement) {
@@ -55,11 +69,11 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
     }
 
     public static @NonNull String getDisplayName(AdvancementData advancementData) {
-        return advancementData.displayInfo ().getTitle().getString();
+        return advancementData.displayInfo().getTitle().getString();
     }
 
     public static @NonNull String getDescription(AdvancementData advancementData) {
-        return advancementData.displayInfo ().getDescription().getString();
+        return advancementData.displayInfo().getDescription().getString();
     }
 
     public static @NonNull String getDisplayName(Advancement advancement) {
@@ -80,13 +94,12 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
         Identifier deserialize = deserialize(json);
         return String.format("%s: %s", I18nUtils.get(String.format("reward.sakura_sign_in.reward_type_%s", ERewardType.ADVANCEMENT.getCode()))
                 , SakuraSignInFabric.getAdvancementData().stream()
-                        .filter(data -> data.id ().equals(deserialize))
+                        .filter(data -> data.id().equals(deserialize))
                         .findFirst().orElse(new AdvancementData(deserialize, null))
-                        .displayInfo ().getTitle().getString());
+                        .displayInfo().getTitle().getString());
     }
 
-    public @NonNull
-    static String getDescription(Advancement advancement) {
+    public @NonNull static String getDescription(Advancement advancement) {
         String result = "";
         AdvancementDisplay display = advancement.getDisplay();
         if (display != null)

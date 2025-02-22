@@ -27,6 +27,8 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Quaternionf;
 
 import java.math.BigDecimal;
@@ -39,6 +41,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 @Environment ( EnvType.CLIENT)
 public class AbstractGuiUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public final static int ITEM_ICON_SIZE = 16;
 
@@ -734,11 +738,16 @@ public class AbstractGuiUtils {
         }
         // 进度
         else if (reward.getType().equals(ERewardType.ADVANCEMENT)) {
-            Identifier resourceLocation = RewardManager.deserializeReward(reward);
-            AdvancementData advancementData = SakuraSignInFabric.getAdvancementData().stream()
-                    .filter(data -> data.id ().toString().equalsIgnoreCase(resourceLocation.toString()))
-                    .findFirst().orElse(new AdvancementData (resourceLocation, null));
-            graphics.drawItem(advancementData.displayInfo ().getIcon(), x, y);
+            try {
+                String advancementId = reward.getContent().get("advancement").getAsString();
+                Identifier resourceLocation = new Identifier(advancementId);
+                AdvancementData advancementData = SakuraSignInFabric.getAdvancementData().stream()
+                        .filter(data -> data.id().toString().equalsIgnoreCase(resourceLocation.toString()))
+                        .findFirst().orElse(new AdvancementData(resourceLocation, null));
+                graphics.drawItem(advancementData.displayInfo().getIcon(), x, y);
+            } catch (Exception e) {
+                LOGGER.error("Failed to render advancement reward", e);
+            }
         }
         // 指令
         else if (reward.getType().equals(ERewardType.COMMAND)) {
@@ -805,7 +814,7 @@ public class AbstractGuiUtils {
     //  region 绘制形状
 
     /**
-     * 绘制一个“像素”矩形
+     * 绘制一个"像素"矩形
      *
      * @param x     像素的 X 坐标
      * @param y     像素的 Y 坐标

@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * @author Flechazo
+ */
 public class RewardList extends ArrayList<Reward> implements Serializable, Cloneable {
     public RewardList() {
     }
@@ -20,17 +23,36 @@ public class RewardList extends ArrayList<Reward> implements Serializable, Clone
         RewardList cloned = (RewardList) super.clone();
         List<Reward> clonedRewards = new ArrayList<>();
         for (Reward reward : this) {
-            clonedRewards.add(reward.clone());
+            if (reward != null) {
+                clonedRewards.add(reward.clone());
+            } else {
+                // 如果遇到null，使用默认奖励替代
+                clonedRewards.add(Reward.getDefault());
+            }
         }
         cloned.clear();
         cloned.addAll(clonedRewards);
         return cloned;
     }
 
+    @Override
+    public boolean add(Reward reward) {
+        // 不允许添加null奖励，使用默认奖励替代
+        return super.add(reward != null ? reward : Reward.getDefault());
+    }
+
+    @Override
+    public void add(int index, Reward reward) {
+        // 不允许添加null奖励，使用默认奖励替代
+        super.add(index, reward != null ? reward : Reward.getDefault());
+    }
+
     public JsonArray toJsonArray() {
         JsonArray jsonArray = new JsonArray();
         for (Reward reward : this) {
-            jsonArray.add(reward.toJsonObject());
+            if (reward != null) {
+                jsonArray.add(reward.toJsonObject());
+            }
         }
         return jsonArray;
     }

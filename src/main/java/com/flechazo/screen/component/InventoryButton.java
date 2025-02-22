@@ -17,6 +17,12 @@ import org.lwjgl.glfw.GLFW;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Consumer;
 
+/**
+ * 库存按钮组件,用于在游戏界面中显示可交互的按钮。
+ * 支持拖拽功能和自定义纹理。
+ *
+ * @author Flechazo
+ */
 @Getter
 @Setter
 @Accessors(chain = true)
@@ -65,10 +71,29 @@ public class InventoryButton extends ClickableWidget {
         this.y_ = y;
     }
 
+    /**
+     * 设置按钮的UV坐标和纹理尺寸
+     *
+     * @param coordinate 包含UV坐标的对象
+     * @param totalWidth 纹理总宽度
+     * @param totalHeight 纹理总高度
+     * @return 当前按钮实例,支持链式调用
+     */
     public InventoryButton setUV(Coordinate coordinate, int totalWidth, int totalHeight) {
         return setUV(coordinate.getU0(), coordinate.getV0(), coordinate.getUWidth(), coordinate.getVHeight(), totalWidth, totalHeight);
     }
 
+    /**
+     * 设置按钮的UV坐标和纹理尺寸
+     *
+     * @param u0 U坐标起点
+     * @param v0 V坐标起点
+     * @param uWidth U方向宽度
+     * @param vHeight V方向高度
+     * @param totalWidth 纹理总宽度
+     * @param totalHeight 纹理总高度
+     * @return 当前按钮实例,支持链式调用
+     */
     public InventoryButton setUV(double u0, double v0, double uWidth, double vHeight, int totalWidth, int totalHeight) {
         this.u0 = u0;
         this.v0 = v0;
@@ -79,6 +104,15 @@ public class InventoryButton extends ClickableWidget {
         return this;
     }
 
+    /**
+     * 渲染按钮
+     * 包括按钮纹理、悬停效果和拖拽提示
+     *
+     * @param graphics 绘图上下文
+     * @param mouseX 鼠标X坐标
+     * @param mouseY 鼠标Y坐标
+     * @param partialTicks 部分刻
+     */
     @Override
     @ParametersAreNonnullByDefault
     public void render(DrawContext graphics, int mouseX, int mouseY, float partialTicks) {
@@ -114,6 +148,14 @@ public class InventoryButton extends ClickableWidget {
         }
     }
 
+    /**
+     * 处理鼠标点击事件
+     *
+     * @param mouseX 鼠标X坐标
+     * @param mouseY 鼠标Y坐标
+     * @param button 按下的鼠标按键
+     * @return 是否处理了此事件
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.pressed = this.isMouseOver(mouseX, mouseY);
@@ -123,6 +165,15 @@ public class InventoryButton extends ClickableWidget {
         return this.pressed;
     }
 
+    /**
+     * 处理鼠标释放事件
+     * 包括拖拽结束和点击事件的处理
+     *
+     * @param mouseX 鼠标X坐标
+     * @param mouseY 鼠标Y坐标
+     * @param button 释放的鼠标按键
+     * @return 是否处理了此事件
+     */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         boolean flag = false;
@@ -154,6 +205,13 @@ public class InventoryButton extends ClickableWidget {
         return flag;
     }
 
+    /**
+     * 处理鼠标移动事件
+     * 更新按钮状态和位置
+     *
+     * @param mouseX 鼠标X坐标
+     * @param mouseY 鼠标Y坐标
+     */
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         this.hovered = this.isMouseOver(mouseX, mouseY);
@@ -166,16 +224,18 @@ public class InventoryButton extends ClickableWidget {
                 super.setX((int) getValidX(this.x_ + (mouseX - this.mouseClickX), this.width));
                 super.setY((int) getValidY(this.y_ + (mouseY - this.mouseClickY), this.height));
             }
-            // 若拖动过程中松开键盘按键则恢复原位
-            else {
-                this.mouseDrag = false;
-                super.setX((int) getValidX(this.x_, this.width));
-                super.setY((int) getValidY(this.y_, this.height));
-            }
         }
         super.mouseMoved(mouseX, mouseY);
     }
 
+    /**
+     * 处理按键按下事件
+     *
+     * @param keyCode 按键代码
+     * @param scanCode 扫描码
+     * @param modifiers 修饰键
+     * @return 是否处理了此事件
+     */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         this.keyCode = keyCode;
@@ -183,6 +243,14 @@ public class InventoryButton extends ClickableWidget {
         return false;
     }
 
+    /**
+     * 处理按键释放事件
+     *
+     * @param keyCode 按键代码
+     * @param scanCode 扫描码
+     * @param modifiers 修饰键
+     * @return 是否处理了此事件
+     */
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         this.keyCode = -1;
@@ -206,7 +274,12 @@ public class InventoryButton extends ClickableWidget {
     }
 
     /**
-     * 获取有效的坐标X
+     * 获取有效的X坐标
+     * 确保按钮不会超出屏幕边界
+     *
+     * @param x 原始X坐标
+     * @param width 按钮宽度
+     * @return 有效的X坐标
      */
     public static double getValidX(double x, int width) {
         int screenWidth = 427;
@@ -218,7 +291,12 @@ public class InventoryButton extends ClickableWidget {
     }
 
     /**
-     * 获取有效的坐标Y
+     * 获取有效的Y坐标
+     * 确保按钮不会超出屏幕边界
+     *
+     * @param y 原始Y坐标
+     * @param height 按钮高度
+     * @return 有效的Y坐标
      */
     public static double getValidY(double y, int height) {
         int screenHeight = 240;
@@ -227,5 +305,30 @@ public class InventoryButton extends ClickableWidget {
             screenHeight = screen.height;
         }
         return Math.min(screenHeight - 2 - height, Math.max(2, y));
+    }
+
+    /**
+     * 处理鼠标拖动事件
+     * 更新按钮位置
+     *
+     * @param mouseX 当前鼠标X坐标
+     * @param mouseY 当前鼠标Y坐标
+     * @param button 按下的鼠标按键
+     * @param deltaX X方向移动距离
+     * @param deltaY Y方向移动距离
+     * @return 是否处理了此事件
+     */
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (this.pressed) {
+            if (((this.keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || this.keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) && this.modifiers == GLFW.GLFW_MOD_CONTROL)
+                    || ((this.keyCode == GLFW.GLFW_KEY_LEFT_ALT || this.keyCode == GLFW.GLFW_KEY_RIGHT_ALT) && this.modifiers == GLFW.GLFW_MOD_ALT)
+                    || this.mouseButton == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                this.mouseDrag = true;
+                super.setX((int) getValidX(this.x_ + deltaX, this.width));
+                super.setY((int) getValidY(this.y_ + deltaY, this.height));
+                return true;
+            }
+        }
+        return false;
     }
 }

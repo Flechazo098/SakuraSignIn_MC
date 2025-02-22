@@ -20,6 +20,7 @@ public class RewardOptionSyncPacket extends SplitPacket {
     private final List<RewardOptionSyncData> data = new ArrayList<>();
 
     public RewardOptionSyncPacket() {
+        super();
         // 基础奖励
         RewardList baseRewards = RewardOptionDataManager.getRewardOptionData().getBaseRewards();
         if (baseRewards != null) {
@@ -109,7 +110,12 @@ public class RewardOptionSyncPacket extends SplitPacket {
         }
     }
 
+    public RewardOptionSyncPacket(PacketByteBuf buf) {
+        super(buf);
+    }
+
     public static void encode(RewardOptionSyncPacket packet, PacketByteBuf buffer) {
+        packet.toBytes(buffer);
         buffer.writeInt(packet.data.size());
         for (RewardOptionSyncData data : packet.data) {
             RewardOptionSyncData.encode(data, buffer);
@@ -117,33 +123,45 @@ public class RewardOptionSyncPacket extends SplitPacket {
     }
 
     public static RewardOptionSyncPacket decode(PacketByteBuf buffer) {
-        RewardOptionSyncPacket packet = new RewardOptionSyncPacket();
-        int size = buffer.readInt();
-        for (int i = 0; i < size; i++) {
-            packet.data.add(RewardOptionSyncData.decode(buffer));
+        RewardOptionSyncPacket packet = new RewardOptionSyncPacket(buffer);
+        if (buffer.readableBytes() > 0) {
+            int size = buffer.readInt();
+            for (int i = 0; i < size; i++) {
+                packet.data.add(RewardOptionSyncData.decode(buffer));
+            }
         }
         return packet;
     }
 
     @Override
+    public void toBytes(PacketByteBuf buf) {
+        super.toBytes(buf);
+    }
+
+    @Override
     public int getChunkSize() {
-        return 1024;
+        return 128;
     }
 
     public List<RewardOptionSyncPacket> Chopping() {
         List<RewardOptionSyncPacket> result = new ArrayList<>();
-        for (int i = 0, index = 0; i < data.size() / getChunkSize() + 1; i++) {
+        int totalChunks = (data.size() + getChunkSize() - 1) / getChunkSize();
+
+        for (int i = 0; i < totalChunks; i++) {
             RewardOptionSyncPacket packet = new RewardOptionSyncPacket();
-            for (int j = 0; j < getChunkSize(); j++) {
-                if (index >= data.size()) break;
-                packet.data.add(this.data.get(index));
-                index++;
+            int startIndex = i * getChunkSize();
+            int endIndex = Math.min(startIndex + getChunkSize(), data.size());
+            
+            for (int j = startIndex; j < endIndex; j++) {
+                packet.data.add(this.data.get(j));
             }
+            
             packet.setId(this.getId());
             packet.setSort(i);
+            packet.setTotal(totalChunks);
             result.add(packet);
         }
-        result.forEach(packet -> packet.setTotal(result.size()));
+        
         return result;
     }
 }

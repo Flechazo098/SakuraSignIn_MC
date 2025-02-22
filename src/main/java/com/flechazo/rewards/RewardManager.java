@@ -72,8 +72,20 @@ public class RewardManager {
     public static <T> T deserializeReward(Reward reward) {
         RewardParser<T> parser = (RewardParser<T>) rewardParsers.get(reward.getType());
         if (parser == null) {
-            throw new JsonParseException ("Unknown reward type: " + reward.getType());
+            throw new JsonParseException("Unknown reward type: " + reward.getType());
         }
+        
+        // 特殊处理进度奖励类型
+        if (reward.getType() == ERewardType.ADVANCEMENT) {
+            try {
+                String advancementId = reward.getContent().get("advancement").getAsString();
+                return (T) new Identifier(advancementId);
+            } catch (Exception e) {
+                LOGGER.error("Failed to parse advancement reward", e);
+                return (T) new Identifier(SakuraSignInFabric.MOD_ID + ":unknownAdvancement");
+            }
+        }
+        
         return parser.deserialize(reward.getContent());
     }
 
@@ -86,6 +98,20 @@ public class RewardManager {
         if (parser == null) {
             throw new JsonParseException("Unknown reward type: " + type);
         }
+        
+        // 特殊处理进度奖励类型
+        if (type == ERewardType.ADVANCEMENT && reward instanceof Reward) {
+            try {
+                Reward rewardObj = (Reward) reward;
+                String advancementId = rewardObj.getContent().get("advancement").getAsString();
+                // 使用类型转换确保类型安全
+                return ((RewardParser<Identifier>)parser).serialize(new Identifier(advancementId));
+            } catch (Exception e) {
+                LOGGER.error("Failed to serialize advancement reward", e);
+                return ((RewardParser<Identifier>)parser).serialize(new Identifier(SakuraSignInFabric.MOD_ID + ":unknownAdvancement"));
+            }
+        }
+        
         return parser.serialize(reward);
     }
 

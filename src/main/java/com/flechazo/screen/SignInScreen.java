@@ -43,6 +43,7 @@ import org.lwjgl.glfw.GLFW;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.flechazo.screen.SignInScreen.OperationButtonType.*;
@@ -181,9 +182,9 @@ public class SignInScreen extends Screen{
         this.updateLayout();
 
         tips = IText.i18n("签到页面开屏提示");
-        ButtonWidget submit = AbstractGuiUtils.newButton(0, 0, 0, 20,
+        ButtonWidget submit = AbstractGuiUtils.newButton(0, 0, 20, 20,
                 AbstractGuiUtils.textToComponent(IText.i18n("确认")), button -> this.SIGN_IN_SCREEN_TIPS = false);
-        ButtonWidget notAgain = AbstractGuiUtils.newButton(0, 0, 0, 20,
+        ButtonWidget notAgain = AbstractGuiUtils.newButton(0, 0, 20, 20,
                 AbstractGuiUtils.textToComponent(IText.i18n("不再提醒")), button -> {
                     this.SIGN_IN_SCREEN_TIPS = false;
                     ClientConfig.setSHOW_SIGN_IN_SCREEN_TIPS(false);
@@ -196,7 +197,9 @@ public class SignInScreen extends Screen{
      * 更新材质及材质坐标信息
      */
     private void updateTextureAndCoordinate() {
-        ClientEventHandler.loadThemeTexture();
+        if (SakuraSignInFabric.getThemeTexture() == null) {
+            new ClientEventHandler().loadThemeTexture();
+        }
         // 更新按钮信息
         this.updateButtons();
     }
@@ -560,8 +563,6 @@ public class SignInScreen extends Screen{
             tips.setGraphics(graphics).setFont(super.textRenderer);
             AbstractGuiUtils.drawString(tips, x, y);
 
-            int buttonWidth = Math.min(100, AbstractGuiUtils.multilineTextWidth(tips) / 2 - 5);
-
             for (Element child : this.children()) {
                 if (child instanceof ButtonWidget button) {
                     String buttonText = button.getMessage().getString();
@@ -569,16 +570,25 @@ public class SignInScreen extends Screen{
                     boolean isDontShowAgainButton = buttonText.equalsIgnoreCase(IText.i18n("不再提醒").getContent());
 
                     if (isConfirmButton || isDontShowAgainButton) {
-                        ButtonWidget newButton = ButtonWidget.builder(button.getMessage(), null)
-                                .position(isConfirmButton ? (int)x : (int)(x + AbstractGuiUtils.multilineTextWidth(tips) - buttonWidth),
-                                        (int)(y + AbstractGuiUtils.multilineTextHeight(tips) + 4))
-                                .size(buttonWidth, 20)
-                                .build();
+                        int buttonWidth = Math.min(100, AbstractGuiUtils.multilineTextWidth(tips) / 2 - 5);
+                        int newX = isConfirmButton ? (int) x : (int) (x + AbstractGuiUtils.multilineTextWidth(tips) - buttonWidth);
+                        int newY = (int) (y + AbstractGuiUtils.multilineTextHeight(tips) + 4);
 
-                        newButton.render(graphics, mouseX, mouseY, partialTicks);
+                        button.setX(newX);
+                        button.setY(newY);
+                        button.setWidth(buttonWidth);
+//                        button.setHeight(20); // 设置高度
+                        button.visible = true;
                     }
                 }
             }
+
+            // 显式渲染所有按钮
+            this.children().forEach(element -> {
+                if (element instanceof ButtonWidget button) {
+                    button.render(graphics, (int) mouseX, (int) mouseY, 0);
+                }
+            });
         }
     }
     /**
@@ -859,16 +869,12 @@ public class SignInScreen extends Screen{
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         this.keyCode = keyCode;
         this.modifiers = modifiers;
-        // 当按键等于SIGN_IN_SCREEN_KEY键的值或Inventory键时，调用onClose方法，并返回true，表示该按键事件已被消耗
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == ClientEventHandler.SIGN_IN_SCREEN_KEY.getDefaultKey().getCode() || keyCode == MinecraftClient.getInstance().options.inventoryKey.getDefaultKey().getCode()) {
-            if (this.SIGN_IN_SCREEN_TIPS) this.SIGN_IN_SCREEN_TIPS = false;
-            else if (this.previousScreen != null) MinecraftClient.getInstance().setScreen(this.previousScreen);
-            else this.close();
+        // 如果按下ESC键或签到界面快捷键或物品栏快捷键则关闭界面
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == MinecraftClient.getInstance().options.inventoryKey.getDefaultKey().getCode()) {
+            this.close();
             return true;
-        } else {
-            // 对于其他按键，交由父类处理，并返回父类的处理结果
-            return super.keyPressed(keyCode, scanCode, modifiers);
         }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

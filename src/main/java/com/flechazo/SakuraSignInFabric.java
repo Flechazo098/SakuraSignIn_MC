@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SakuraSignInFabric implements ModInitializer {
-	public static final String MOD_ID = "sakura-sign-in";
+	public static final String MOD_ID = "sakura_sign_in";
 	public static final String PNG_CHUNK_NAME = "vacb";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
@@ -106,18 +106,21 @@ public class SakuraSignInFabric implements ModInitializer {
 	private static final RewardList clipboard = new RewardList();
 
 	@Override
-	public void onInitialize(){
+	public void onInitialize() {
+		LOGGER.info("Initializing SakuraSignInFabric mod...");
+
 		// 初始化配置
 		ServerConfig.init();
-		ClientConfig.init();
+		LOGGER.info("Server config initialized.");
 
 		// 注册事件处理器
 		ModEventHandler.register();
 		ServerEventHandler.register();
-		ClientEventHandler.register();
+		LOGGER.info("Server event handlers registered.");
 
 		// 注册网络通道
 		ModNetworkHandler.registerPackets();
+		LOGGER.info("Network packets registered.");
 
 		// 注册服务器生命周期事件
 		ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
@@ -126,12 +129,15 @@ public class SakuraSignInFabric implements ModInitializer {
 		// 注册命令
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			SignInCommand.register(dispatcher);
+			LOGGER.info("Sign-in command registered.");
 		});
 
 		// 玩家登出事件
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			handlePlayerLogout(handler.getPlayer());
+			LOGGER.info("Player logged out event registered.");
 		});
+		LOGGER.info("SakuraSignInFabric mod initialized successfully.");
 	}
 
 	private void onServerStarting(MinecraftServer server) {
@@ -157,7 +163,7 @@ public class SakuraSignInFabric implements ModInitializer {
 
 	public static TextureCoordinate getThemeTextureCoordinate(boolean nonNull) {
 		if (nonNull && (themeTextureCoordinate == null || themeTexture == null)) {
-			ClientEventHandler.loadThemeTexture();
+			new ClientEventHandler().loadThemeTexture();
 		}
 		return themeTextureCoordinate;
 	}

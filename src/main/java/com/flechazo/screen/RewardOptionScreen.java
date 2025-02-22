@@ -790,7 +790,7 @@ public class RewardOptionScreen extends Screen {
                             return result;
                         }));
                     } else if (rule != ERewardRule.BASE_REWARD) {
-                        String validator = rule == ERewardRule.RANDOM_REWARD ? "(0?1(\\.0{0,10})?|0(\\.\\d{0,10})?)?" : "[\\d +~/:.T-]*";
+                        String validator = rule == ERewardRule.RANDOM_REWARD ? "(0?1(\\.0{0,10})?|0(\\.\\d{0,10})?)?" : "[\\d +~/:.tT-]*";
                         MinecraftClient.getInstance().setScreen(new StringInputScreen(this
                                 , IText.i18n("请输入规则名称").setShadow(true)
                                 , IText.i18n("请输入")
@@ -1043,7 +1043,7 @@ public class RewardOptionScreen extends Screen {
                                 return result;
                             }));
                         } else {
-                            String validator = rule == ERewardRule.RANDOM_REWARD ? "(0?1(\\.0{0,10})?|0(\\.\\d{0,10})?)?" : "[\\d +~/:.T-]*";
+                            String validator = rule == ERewardRule.RANDOM_REWARD ? "(0?1(\\.0{0,10})?|0(\\.\\d{0,10})?)?" : "[\\d +~/:.tT-]*";
                             MinecraftClient.getInstance().setScreen(new StringInputScreen(this, IText.i18n("请输入规则名称").setShadow(true), IText.i18n("请输入"), validator, key, input -> {
                                 StringList result = new StringList();
                                 if (CollectionUtils.isNotNullOrEmpty(input)) {
@@ -1454,7 +1454,9 @@ public class RewardOptionScreen extends Screen {
         super.init();
         this.leftBarTitleHeight = 5 * 2 + super.textRenderer.fontHeight;
         // 初始化材质及材质坐标信息
-        ClientEventHandler.loadThemeTexture();
+        if (SakuraSignInFabric.getThemeTexture() == null) {
+            new ClientEventHandler().loadThemeTexture();
+        }
         OP_BUTTONS.put(OperationButtonType.REWARD_PANEL.getCode(), new OperationButton(OperationButtonType.REWARD_PANEL.getCode(), context -> {
         })
                 .setTransparentCheck(false));

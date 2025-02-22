@@ -223,17 +223,23 @@ public class AdvancementSelectScreen extends Screen {
                         MinecraftClient.getInstance().setScreen(previousScreen);
                     } else {
                         // 获取选择的数据，并执行回调
-                        Identifier resourceLocation = RewardManager.deserializeReward(this.currentAdvancement);
-                        if (onDataReceived1 != null) {
-                            onDataReceived1.accept(new Reward(resourceLocation, ERewardType.ADVANCEMENT, this.probability));
-                            MinecraftClient.getInstance().setScreen(previousScreen);
-                        } else if (onDataReceived2 != null) {
-                            String result = onDataReceived2.apply(new Reward(resourceLocation, ERewardType.ADVANCEMENT, this.probability));
-                            if (StringUtils.isNotNullOrEmpty(result)) {
-                                // this.errorText = Text.literal(result).setColor(0xFFFF0000);
-                            } else {
+                        try {
+                            String advancementId = this.currentAdvancement.getContent().get("advancement").getAsString();
+                            Identifier resourceLocation = new Identifier(advancementId);
+                            Reward reward = new Reward(resourceLocation, ERewardType.ADVANCEMENT, this.probability);
+                            if (onDataReceived1 != null) {
+                                onDataReceived1.accept(reward);
                                 MinecraftClient.getInstance().setScreen(previousScreen);
+                            } else if (onDataReceived2 != null) {
+                                String result = onDataReceived2.apply(reward);
+                                if (StringUtils.isNotNullOrEmpty(result)) {
+                                    // this.errorText = Text.literal(result).setColor(0xFFFF0000);
+                                } else {
+                                    MinecraftClient.getInstance().setScreen(previousScreen);
+                                }
                             }
+                        } catch (Exception e) {
+                            LOGGER.error("Failed to parse advancement ID", e);
                         }
                     }
                 }));
@@ -495,8 +501,10 @@ public class AdvancementSelectScreen extends Screen {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             if (StringUtils.isNotNullOrEmpty(bt.getId())) {
                 Identifier resourceLocation = new Identifier(bt.getId());
-                this.currentAdvancement = new Reward(resourceLocation, ERewardType.ADVANCEMENT, this.probability);
-                LOGGER.debug("Select effect: {}", AdvancementRewardParser.getAdvancementData(resourceLocation).displayInfo ().getTitle().getString());
+                JsonObject content = new JsonObject();
+                content.addProperty("advancement", resourceLocation.toString());
+                this.currentAdvancement = new Reward(content, ERewardType.ADVANCEMENT, this.probability);
+                LOGGER.debug("Select advancement: {}", AdvancementRewardParser.getAdvancementData(resourceLocation).displayInfo().getTitle().getString());
                 flag.set(true);
             }
         }
@@ -519,18 +527,14 @@ public class AdvancementSelectScreen extends Screen {
                     , input -> {
                 StringList result = new StringList();
                 if (CollectionUtils.isNotNullOrEmpty(input)) {
-                    Identifier instance;
                     String json = input.get(0);
                     try {
                         JsonObject jsonObject = GSON.fromJson(json, JsonObject.class);
-                        instance = RewardManager.deserializeReward(new Reward(jsonObject, ERewardType.ADVANCEMENT, this.probability));
+                        String advancementId = jsonObject.get("advancement").getAsString();
+                        Identifier resourceLocation = new Identifier(advancementId);
+                        this.currentAdvancement = new Reward(jsonObject, ERewardType.ADVANCEMENT, this.probability);
                     } catch (Exception e) {
                         LOGGER.error("Invalid Json: {}", json);
-                        instance = null;
-                    }
-                    if (instance != null) {
-                        this.currentAdvancement = new Reward(instance, ERewardType.ADVANCEMENT, this.probability);
-                    } else {
                         result.add(getByZh("进度Json[%s]输入有误", json));
                     }
                 }
