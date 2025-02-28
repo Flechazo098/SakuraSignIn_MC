@@ -16,16 +16,16 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.flechazo.SakuraSignInFabric"
+          "com.flechazo.sakura.SakuraSignInFabric"
 		],
 		"client": [
-			"com.flechazo.SakuraSignInFabricClient"
+          "com.flechazo.sakura.SakuraSignInFabricClient"
 		],
 		"server": [
-			"com.flechazo.SakuraSignInFabricServer"
+          "com.flechazo.sakura.SakuraSignInFabricServer"
 		],
 		"cardinal-components": [
-			"com.flechazo.event.ServerEventHandler"
+          "com.flechazo.sakura.event.ServerEventHandler"
 		]
 	},
 	"mixins": [
