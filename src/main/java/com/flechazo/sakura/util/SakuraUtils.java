@@ -147,7 +147,7 @@ public class SakuraUtils {
      * @param message 消息
      */
     public static void broadcastMessage(ServerPlayerEntity player, Component message) {
-        player.server.getPlayerManager().broadcast(Text.translatable("chat.type.announcement", player.getDisplayName(), message.toTextComponent()), false);
+        player.server.getPlayerManager().broadcast(Text.translatable("chat.type.announcement", player.getDisplayName(), message.toChatComponent()), false);
     }
 
     /**
@@ -157,7 +157,7 @@ public class SakuraUtils {
      * @param message 消息
      */
     public static void broadcastMessage(MinecraftServer server, Component message) {
-        server.getPlayerManager().broadcast(Text.translatable("chat.type.announcement", "Server", message.toTextComponent()), false);
+        server.getPlayerManager().broadcast(Text.translatable("chat.type.announcement", "Server", message.toChatComponent()), false);
     }
 
     /**
@@ -178,7 +178,7 @@ public class SakuraUtils {
      * @param message 消息
      */
     public static void sendMessage(ClientPlayerEntity player, Component message) {
-        player.sendMessage(message.toTextComponent(getClientLanguage()));
+        player.sendMessage(message.toChatComponent(getClientLanguage()));
     }
 
     /**

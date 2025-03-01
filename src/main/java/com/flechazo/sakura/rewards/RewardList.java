@@ -21,16 +21,15 @@ public class RewardList extends ArrayList<Reward> implements Serializable, Clone
 
     @Override
     public RewardList clone() {
-        RewardList cloned = (RewardList) super.clone();
-        List<Reward> clonedRewards = new ArrayList<>();
-        if (!CollectionUtils.isNullOrEmpty(this)) {
+        try {
+            RewardList cloned = new RewardList();
             for (Reward reward : this) {
-                clonedRewards.add(reward.clone());
+                cloned.add(reward != null ? reward.clone() : null);
             }
+            return cloned;
+        } catch (Exception e) {
+            return new RewardList();
         }
-        cloned.clear();
-        cloned.addAll(clonedRewards);
-        return cloned;
     }
 
     @Override

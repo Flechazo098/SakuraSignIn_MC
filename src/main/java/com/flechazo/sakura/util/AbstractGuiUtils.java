@@ -557,7 +557,7 @@ public class AbstractGuiUtils {
                 };
                 //绘制每行文本
                 DrawContext graphics = text.getGraphics();
-                graphics.drawText(font, text.copy().setText(line).toComponent().toTextComponent().asOrderedText(), (int) ((float) x + xOffset), (int) ((float) y + index * font.fontHeight), text.getColor(), text.isShadow());
+                graphics.drawText(font, text.copyWithoutChildren().setText(line).toComponent().toTextComponent().asOrderedText(), (int) ((float) x + xOffset), (int) ((float) y + index * font.fontHeight), text.getColor(), text.isShadow());
                 index++;
             }
         }

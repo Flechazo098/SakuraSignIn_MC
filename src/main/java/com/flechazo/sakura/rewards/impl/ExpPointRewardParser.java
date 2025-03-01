@@ -3,6 +3,7 @@ package com.flechazo.sakura.rewards.impl;
 import com.flechazo.sakura.enums.EI18nType;
 import com.flechazo.sakura.enums.ERewardType;
 import com.flechazo.sakura.rewards.RewardParser;
+import com.flechazo.sakura.util.Component;
 import com.flechazo.sakura.util.I18nUtils;
 import com.google.gson.JsonObject;
 import lombok.NonNull;
@@ -27,14 +28,14 @@ public class ExpPointRewardParser implements RewardParser <Integer> {
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json) {
         return getDisplayName(languageCode, json, false);
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json, boolean withNum) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json, boolean withNum) {
         int num = deserialize(json);
-        String rewardType = I18nUtils.getTranslation(EI18nType.WORD, "reward_type_" + ERewardType.EXP_POINT.getCode(), languageCode);
-        return rewardType + (withNum ? "x" + num : "");
+        return Component.translatable(languageCode, EI18nType.WORD, "reward_type_" + ERewardType.EXP_POINT.getCode())
+                .append(withNum ? "x" + num : "");
     }
 }

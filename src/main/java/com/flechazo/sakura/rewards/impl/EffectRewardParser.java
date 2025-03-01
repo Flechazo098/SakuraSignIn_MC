@@ -3,6 +3,7 @@ package com.flechazo.sakura.rewards.impl;
 import com.flechazo.sakura.enums.EI18nType;
 import com.flechazo.sakura.enums.ERewardType;
 import com.flechazo.sakura.rewards.RewardParser;
+import com.flechazo.sakura.util.Component;
 import com.flechazo.sakura.util.I18nUtils;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -53,14 +54,15 @@ public class EffectRewardParser implements RewardParser < StatusEffectInstance >
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json) {
         return getDisplayName(languageCode, json, false);
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json, boolean withNum) {
-        String rewardType = I18nUtils.getTranslation(EI18nType.WORD, "reward_type_" + ERewardType.EFFECT.getCode(), languageCode);
-        return String.format("%s: %s", rewardType, this.deserialize(json).getEffectType().getName().getString());
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json, boolean withNum) {
+        return Component.translatable(languageCode, EI18nType.WORD, "reward_type_" + ERewardType.EFFECT.getCode())
+                .append(": ")
+                .append(Component.original(this.deserialize(json).getEffectType().getName()));
     }
 
     public static @NonNull String getDisplayName(StatusEffectInstance instance) {

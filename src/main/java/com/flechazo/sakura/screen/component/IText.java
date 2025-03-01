@@ -64,7 +64,7 @@ public class IText {
 
     public IText(Component text) {
         this.text = text;
-        this.hoverText = text;
+        this.hoverText = text.clone();
     }
 
 
@@ -80,6 +80,18 @@ public class IText {
         return new IText ()
                 .setText(this.text.clone())
                 .setHoverText(this.hoverText.clone())
+                .setHovered(this.hovered)
+                .setAlign(this.align)
+                .setHoverAlign(this.hoverAlign)
+                .setGraphics(this.graphics)
+                .setFont(this.font);
+    }
+
+
+    public IText copyWithoutChildren() {
+        return new IText()
+                .setText(this.text.clone().clearChildren().clearArgs())
+                .setHoverText(this.hoverText.clone().clearChildren().clearArgs())
                 .setHovered(this.hovered)
                 .setAlign(this.align)
                 .setHoverAlign(this.hoverAlign)
@@ -159,7 +171,7 @@ public class IText {
 
     public IText setText(Component text) {
         this.text = text;
-        this.hoverText = text;
+        this.hoverText = text.clone();
         return this;
     }
 

@@ -1,6 +1,7 @@
 package com.flechazo.sakura.rewards.impl;
 
 import com.flechazo.sakura.rewards.RewardParser;
+import com.flechazo.sakura.util.Component;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -72,14 +73,15 @@ public class ItemRewardParser implements RewardParser < ItemStack > {
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json) {
         return getDisplayName(languageCode, json, false);
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json, boolean withNum) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json, boolean withNum) {
         ItemStack itemStack = this.deserialize(json);
-        return itemStack.toHoverableText().getString().replaceAll("\\[(.*)]", "$1") + (withNum ? "x" + itemStack.getCount() : "");
+        return Component.original(itemStack.getName())
+                .append(withNum ? "x" + itemStack.getCount() : "");
     }
     public @NonNull
     static String getDisplayName(ItemStack itemStack) {

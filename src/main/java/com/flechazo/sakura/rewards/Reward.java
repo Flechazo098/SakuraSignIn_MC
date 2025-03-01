@@ -1,6 +1,8 @@
 package com.flechazo.sakura.rewards;
 
 import com.flechazo.sakura.enums.ERewardType;
+import com.flechazo.sakura.screen.component.IText;
+import com.flechazo.sakura.util.Component;
 import com.google.gson.JsonObject;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -73,10 +75,6 @@ public class Reward implements Cloneable, Serializable {
     public Reward clone() {
         try {
             Reward cloned = (Reward) super.clone();
-            cloned.rewarded = this.rewarded;
-            cloned.disabled = this.disabled;
-            cloned.type = this.type;
-            cloned.probability = this.probability;
             cloned.content = GSON.fromJson(GSON.toJson(this.content), JsonObject.class);
             return cloned;
         } catch (Exception e) {
@@ -84,11 +82,11 @@ public class Reward implements Cloneable, Serializable {
         }
     }
 
-    public String getName(String languageCode) {
-        return getName(languageCode, true);
+    public IText getName(String languageCode) {
+        return new IText(getName(languageCode, true));
     }
 
-    public String getName(String languageCode, boolean withNum) {
+    public Component getName(String languageCode, boolean withNum) {
         return RewardManager.getRewardName(languageCode, this, withNum);
     }
 
@@ -113,8 +111,7 @@ public class Reward implements Cloneable, Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         Reward reward = (Reward) o;
         return type == reward.type && 
-               (content == reward.content || 
-                (content != null && content.equals(reward.content)));
+               (Objects.equals(content, reward.content));
     }
 
     @Override

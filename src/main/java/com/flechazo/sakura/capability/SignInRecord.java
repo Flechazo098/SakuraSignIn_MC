@@ -1,6 +1,7 @@
 package com.flechazo.sakura.capability;
 
 import com.flechazo.sakura.rewards.RewardList;
+import com.flechazo.sakura.util.CollectionUtils;
 import com.flechazo.sakura.util.DateUtils;
 import lombok.Data;
 import lombok.NonNull;
@@ -53,11 +54,11 @@ public class SignInRecord implements Serializable, Cloneable {
     // 序列化到 NBT
     public NbtCompound writeToNBT() {
         NbtCompound tag = new NbtCompound();
-        tag.putString("compensateTime", DateUtils.toDateTimeString(compensateTime != null ? compensateTime : new Date()));
-        tag.putString("signInTime", DateUtils.toDateTimeString(signInTime != null ? signInTime : new Date()));
-        tag.putString("signInUUID", signInUUID != null ? signInUUID : "");
+        tag.putString("compensateTime", DateUtils.toDateTimeString(compensateTime));
+        tag.putString("signInTime", DateUtils.toDateTimeString(signInTime));
+        tag.putString("signInUUID", signInUUID);
         tag.putBoolean("rewarded", rewarded);
-        tag.putString("rewardList", GSON.toJson(rewardList != null ? rewardList : new RewardList()));
+        tag.putString("rewardList", GSON.toJson(rewardList.toJsonArray()));
         return tag;
     }
 
@@ -88,13 +89,14 @@ public class SignInRecord implements Serializable, Cloneable {
     public SignInRecord clone() {
         try {
             SignInRecord cloned = (SignInRecord) super.clone();
-            cloned.compensateTime = (Date) (this.compensateTime != null ? this.compensateTime.clone() : new Date());
-            cloned.signInTime = (Date) (this.signInTime != null ? this.signInTime.clone() : new Date());
-            cloned.signInUUID = this.signInUUID != null ? this.signInUUID : "";
-            cloned.rewarded = this.rewarded;
-            cloned.rewardList = this.rewardList != null ? this.rewardList.clone() : new RewardList();
+            cloned.compensateTime = (Date) this.compensateTime.clone();
+            cloned.signInTime = (Date) this.signInTime.clone();
+            if (CollectionUtils.isNotNullOrEmpty(this.rewardList))
+                cloned.rewardList = this.rewardList.clone();
+            else
+                cloned.rewardList = new RewardList();
             return cloned;
-        } catch (CloneNotSupportedException e) {
+        } catch (Exception e) {
             return new SignInRecord();
         }
     }

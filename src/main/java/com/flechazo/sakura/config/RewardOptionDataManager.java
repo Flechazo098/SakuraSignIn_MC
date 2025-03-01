@@ -1060,7 +1060,7 @@ public class RewardOptionDataManager {
         RewardOptionSyncPacket packet = new RewardOptionSyncPacket();
         
         // 使用Set来去重
-        Set<RewardOptionSyncData> uniqueRewards = new HashSet<>();
+        List <RewardOptionSyncData> uniqueRewards = new ArrayList<>();
         
         // 遍历所有奖励规则
         for (ERewardRule rule : ERewardRule.values()) {

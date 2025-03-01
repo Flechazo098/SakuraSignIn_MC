@@ -65,12 +65,12 @@ public class MessageRewardParser implements RewardParser < Component > {
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json) {
         return getDisplayName(languageCode, json, false);
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json, boolean withNum) {
-        return I18nUtils.getTranslation(EI18nType.WORD, "reward_type_" + ERewardType.MESSAGE.getCode(), languageCode);
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json, boolean withNum) {
+        return Component.translatable(languageCode, EI18nType.WORD, "reward_type_" + ERewardType.MESSAGE.getCode());
     }
 }

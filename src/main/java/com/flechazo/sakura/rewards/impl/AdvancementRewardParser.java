@@ -5,6 +5,7 @@ import com.flechazo.sakura.enums.EI18nType;
 import com.flechazo.sakura.enums.ERewardType;
 import com.flechazo.sakura.network.AdvancementData;
 import com.flechazo.sakura.rewards.RewardParser;
+import com.flechazo.sakura.util.Component;
 import com.flechazo.sakura.util.I18nUtils;
 import com.google.gson.JsonObject;
 import lombok.NonNull;
@@ -89,19 +90,19 @@ public class AdvancementRewardParser implements RewardParser < Identifier > {
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json) {
         return getDisplayName(languageCode, json, false);
     }
 
     @Override
-    public @NonNull String getDisplayName(String languageCode, JsonObject json, boolean withNum) {
+    public @NonNull Component getDisplayName(String languageCode, JsonObject json, boolean withNum) {
         Identifier deserialize = deserialize(json);
-        String rewardType = I18nUtils.getTranslation(EI18nType.WORD, "reward_type_" + ERewardType.ADVANCEMENT.getCode(), languageCode);
-        return String.format("%s: %s", rewardType
-                , SakuraSignInFabric.getAdvancementData().stream()
+        return Component.translatable(languageCode, EI18nType.WORD, "reward_type_" + ERewardType.ADVANCEMENT.getCode())
+                .append(": ")
+                .append(Component.original(SakuraSignInFabric.getAdvancementData().stream()
                         .filter(data -> data.id().equals(deserialize))
                         .findFirst().orElse(new AdvancementData(deserialize, null))
-                        .displayInfo().getTitle().getString());
+                        .displayInfo().getTitle()));
     }
 
     public @NonNull static String getDescription(Advancement advancement) {

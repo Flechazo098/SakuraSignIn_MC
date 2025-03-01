@@ -12,6 +12,7 @@ import com.flechazo.sakura.network.ModNetworkHandler;
 import com.flechazo.sakura.network.SplitPacket;
 import com.flechazo.sakura.rewards.RewardList;
 import com.flechazo.sakura.screen.coordinate.TextureCoordinate;
+import com.flechazo.sakura.util.Component;
 import com.flechazo.sakura.util.DateUtils;
 import lombok.Getter;
 import lombok.NonNull;
