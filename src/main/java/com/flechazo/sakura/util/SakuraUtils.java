@@ -247,7 +247,7 @@ public class SakuraUtils {
         }
     }
 
-    @Environment(EnvType.CLIENT)
+    // @Environment(EnvType.CLIENT)
     private static String getClientLanguageNative() {
         return MinecraftClient.getInstance().getLanguageManager().getLanguage();
     }
