@@ -21,6 +21,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -236,12 +238,20 @@ public class SakuraUtils {
      */
     public static String getClientLanguage() {
         try {
-            // 尝试获取客户端语言
-            return MinecraftClient.getInstance().getLanguageManager().getLanguage();
+            if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+                return getClientLanguageNative(); // 单独封装客户端方法
+            } 
+            else {
+                return "en_us"; // 服务器端返回默认语言
+            }
         } catch (Exception e) {
-            // 在服务端环境下返回默认语言
             return "en_us";
         }
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static String getClientLanguageNative() {
+        return MinecraftClient.getInstance().getLanguageManager().getLanguage();
     }
 
 
