@@ -21,6 +21,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -247,7 +249,7 @@ public class SakuraUtils {
         }
     }
 
-    // @Environment(EnvType.CLIENT)
+    @Environment(EnvType.CLIENT)
     private static String getClientLanguageNative() {
         return MinecraftClient.getInstance().getLanguageManager().getLanguage();
     }
